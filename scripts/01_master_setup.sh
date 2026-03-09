@@ -2,16 +2,18 @@
 # =============================================================================
 #  Xinle 欣乐 — Master Infrastructure Setup Script & Bootstrapper
 # =============================================================================
-#  Version: 9.8
+#  Version: 9.10
 #
 #  This script is the single entry point for deploying the entire Xinle
 #  self-hosted infrastructure stack on a fresh Ubuntu 24.04.4 LTS server.
 #
-#  FIX in 9.7: Solves the infinite loop by passing a `--bootstrapped` flag
-#  after the first exec, preventing the pre-flight cleanup from running again.
-#  Also fixes the Docker detection logic to be more precise.
-#  FIX in 9.8: Fixes IPsec rollback to use correct 'ipsec' service name on
-#  Ubuntu 24.04 and also removes the xfrm0 systemd unit file on rollback.
+#  FIX in 9.7:  Infinite loop fix — --bootstrapped flag prevents re-running
+#               pre-flight cleanup on exec handoff. Precise Docker detection.
+#  FIX in 9.8:  IPsec rollback uses correct 'ipsec' service name on Ubuntu 24.04.
+#  FIX in 9.9:  Correct NetLock RMM image names, appsettings format, and
+#               directory seeding before docker compose up.
+#  FIX in 9.10: IPsec rollback also purges iptables-persistent, stops
+#               xfrm0-interface.service, and deletes the xfrm0 link.
 # =============================================================================
 
 set -e
@@ -88,10 +90,12 @@ rollback() {
     if [ "$STATE_IPSEC_INSTALLED" = true ]; then
         print_info "Uninstalling IPsec (strongSwan)..."
         sudo systemctl stop ipsec || true
+        sudo systemctl stop xfrm0-interface.service || true
         sudo systemctl disable xfrm0-interface.service || true
-        sudo apt-get purge -y strongswan strongswan-starter strongswan-pki || true
+        sudo apt-get purge -y strongswan strongswan-starter iptables-persistent || true
         sudo rm -rf /etc/ipsec.conf /etc/ipsec.secrets /etc/ipsec.d || true
         sudo rm -f /etc/systemd/system/xfrm0-interface.service || true
+        sudo ip link del xfrm0 2>/dev/null || true
         sudo systemctl daemon-reload || true
     fi
     if [ "$STATE_DOCKER_DIR_CREATED" = true ]; then

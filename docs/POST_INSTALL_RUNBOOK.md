@@ -1,6 +1,6 @@
 # Xinle RMMX: Post-Installation Runbook
 
-**Version 1.0**
+**Version 1.1**
 
 ---
 
@@ -44,25 +44,68 @@ First, you must point your domain name (`rmmx.xinle.biz`) to the server's public
 
 Next, configure your UniFi Dream Machine (UDM) Pro to establish the site-to-site VPN tunnel. Use the values that were printed at the end of the installation script.
 
+> **Architecture note**: The **UDM Pro is the initiator** of this tunnel. The VPS listens and responds. This is because the VPS has a static public IP and the UDM Pro's WAN IP may change. The VPS `ipsec.conf` uses `auto=add` (listen) and `right=%any` (accept any peer).
+
+### 2a. UDM Pro Configuration
+
 1.  Log in to your [UniFi Network Controller](https://ai.xinle.biz/).
 2.  Go to **Settings** > **Networks**.
 3.  Click **Create New Network**.
 4.  Select **Site-to-Site VPN** and choose **Manual IPsec**.
-5.  Fill in the fields using the information from the script's output. The mapping is as follows:
+5.  Fill in the fields using the information from the script's output:
 
-| UniFi Field | Value from Script Output |
+| UniFi Field | Value |
 | :--- | :--- |
-| **Name** | `Xinle RMMX VPS` (or any name you prefer) |
+| **Name** | `Xinle RMMX VPS` |
 | **Pre-Shared Key** | The `PSK` value printed by the script |
-| **Remote IP / Hostname** | The public IP of your VPS (`184.105.7.78`) |
-| **Remote Subnets** | The `DOCKER_SUBNET` (`172.20.0.0/16`) |
+| **Server Address** | `184.105.7.78` (VPS public IP) |
+| **Remote Subnets** | `172.20.0.0/16` (VPS Docker subnet) |
+| **Local Subnets** | `10.1.0.0/24` (UDM Pro LAN) |
 | **IKE Version** | `IKEv2` |
-| **Key Exchange** | `IKEv2` |
 | **Encryption** | `AES-256` |
-| **Hash** | `SHA256` |
-| **DH Group** | `14` |
+| **Hash** | `SHA-256` |
+| **DH Group** | `14 (2048-bit MODP)` |
+| **PFS** | Enabled (Group 14) |
 
-6.  Save the configuration. The VPN tunnel should connect within a few minutes.
+6.  Save the configuration. The UDM Pro will initiate the tunnel immediately.
+
+### 2b. Verify the Tunnel on the VPS
+
+SSH into the VPS and run the following commands to confirm the tunnel is established:
+
+```bash
+# Check IPsec SA (Security Association) status — should show ESTABLISHED
+sudo ipsec status
+
+# Check that the xfrm0 interface is up and has the tunnel IP
+ip addr show xfrm0
+
+# Check that the route to the UDM Pro LAN is present
+ip route show | grep 10.1.0.0
+
+# Ping the UDM Pro gateway
+ping -c 3 10.1.0.1
+
+# Ping a device on the UDM Pro LAN (replace with a real device IP)
+ping -c 3 10.1.0.100
+```
+
+### 2c. Troubleshooting
+
+If the tunnel does not come up, check the strongSwan log for errors:
+
+```bash
+sudo journalctl -u ipsec -f --no-pager
+```
+
+Common issues and fixes:
+
+| Symptom | Likely Cause | Fix |
+| :--- | :--- | :--- |
+| `NO_PROPOSAL_CHOSEN` | IKE/ESP cipher mismatch | Verify AES-256/SHA-256/Group-14 on both sides |
+| `AUTHENTICATION_FAILED` | PSK mismatch | Re-check the PSK value on the UDM Pro |
+| `TS_UNACCEPTABLE` | Subnet mismatch | Verify Local/Remote subnets match exactly |
+| Tunnel up but no ping | Missing route or iptables | Run `ip route show` and `iptables -L FORWARD` on VPS |
 
 ---
 
