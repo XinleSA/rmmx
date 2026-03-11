@@ -1,7 +1,7 @@
 #!/bin/bash
 #############################################################################
 # Author: James Barrett | Company: Xinle, LLC
-# Version: 13.3.0
+# Version: 13.4.0
 # Created: March 11, 2025
 # Last Modified: March 11, 2025
 #############################################################################
@@ -73,7 +73,7 @@ print_banner() {
     echo "  ╔══════════════════════════════════════════════════════════════════╗"
     echo "  ║          Xinle 欣乐 — Infrastructure Deployment                 ║"
     echo "  ║          Author: James Barrett | Xinle, LLC                     ║"
-    echo "  ║          Version: 13.3.0                                        ║"
+    echo "  ║          Version: 13.4.0                                        ║"
     echo "  ╚══════════════════════════════════════════════════════════════════╝"
     echo -e "\e[0m"
 }
@@ -91,34 +91,67 @@ print_warn()  { echo -e "\e[1;33m  [WARN]  $1\e[0m"; }
 print_error() { echo -e "\e[1;31m  [ERROR] $1\e[0m" >&2; }
 
 wait_for_apt() {
-    # Block until all apt/dpkg locks are released, then disable unattended-upgrades
-    # for the duration of the install to prevent lock re-acquisition mid-run.
+    # Ensures apt/dpkg is fully available before running any apt-get command.
+    # Strategy (escalating):
+    #   1. Stop all known lock-holders (unattended-upgrades, apt-daily)
+    #   2. Wait up to 30s for clean release
+    #   3. If still locked: kill ALL apt/dpkg processes and remove lock files
+    #      (safe on a fresh VPS mid-install — no partial transactions in flight)
+    #   4. Run dpkg --configure -a to clean up any interrupted state
     local waited=0
-    local max_wait=120  # seconds
+    local soft_wait=30   # seconds to wait politely before going nuclear
+    local lock_files=(
+        /var/lib/dpkg/lock-frontend
+        /var/lib/dpkg/lock
+        /var/cache/apt/archives/lock
+        /var/lib/apt/lists/lock
+    )
 
-    # Kill unattended-upgrades if running — it holds the lock for minutes
-    if pgrep -x unattended-upgr >/dev/null 2>&1; then
-        print_warn "unattended-upgrades is running. Stopping it for the install..."
-        systemctl stop unattended-upgrades 2>/dev/null || true
-        pkill -x unattended-upgr 2>/dev/null || true
-        sleep 2
-    fi
-
-    # Also disable apt-daily timers during install
+    # --- Step 1: Stop all known apt background services ---
+    print_info "Ensuring apt is free..."
+    systemctl stop unattended-upgrades apt-daily.service         apt-daily-upgrade.service 2>/dev/null || true
     systemctl stop apt-daily.timer apt-daily-upgrade.timer 2>/dev/null || true
-    systemctl stop apt-daily.service apt-daily-upgrade.service 2>/dev/null || true
 
-    while fuser /var/lib/dpkg/lock-frontend /var/lib/apt/lists/lock >/dev/null 2>&1; do
-        if [ $waited -ge $max_wait ]; then
-            print_error "apt lock held for ${max_wait}s — giving up. Run: sudo lsof /var/lib/dpkg/lock-frontend"
-            return 1
+    # Kill any lingering unattended-upgrades or apt processes gracefully
+    pkill -TERM -f unattended-upgrade 2>/dev/null || true
+    pkill -TERM -f "apt-get"          2>/dev/null || true
+    pkill -TERM -f "dpkg"             2>/dev/null || true
+    sleep 3
+
+    # --- Step 2: Wait politely up to soft_wait seconds ---
+    while fuser "${lock_files[@]}" >/dev/null 2>&1; do
+        if [ $waited -ge $soft_wait ]; then
+            break  # escalate to nuclear
         fi
-        print_info "Waiting for apt lock... (${waited}s / ${max_wait}s)"
+        print_info "Waiting for apt lock... (${waited}s)"
         sleep 5
         waited=$((waited + 5))
     done
 
-    [ $waited -gt 0 ] && print_ok "apt lock released after ${waited}s."
+    # --- Step 3: Nuclear option — forcibly remove lock files ---
+    if fuser "${lock_files[@]}" >/dev/null 2>&1; then
+        print_warn "apt lock still held after ${waited}s. Forcibly clearing..."
+
+        # Kill any remaining apt/dpkg processes hard
+        pkill -KILL -f unattended-upgrade 2>/dev/null || true
+        pkill -KILL -f "apt-get"          2>/dev/null || true
+        pkill -KILL -f "dpkg"             2>/dev/null || true
+        sleep 2
+
+        # Remove the lock files — safe because we killed all holders
+        for lf in "${lock_files[@]}"; do
+            [ -f "$lf" ] && rm -f "$lf" &&                 print_info "Removed stale lock: $lf" || true
+        done
+
+        # Remove any dpkg front-end lock socket
+        rm -f /var/lib/dpkg/lock-frontend 2>/dev/null || true
+    fi
+
+    # --- Step 4: Repair any interrupted dpkg state ---
+    print_info "Running dpkg --configure -a to repair any interrupted state..."
+    DEBIAN_FRONTEND=noninteractive dpkg --configure -a 2>/dev/null || true
+
+    print_ok "apt is ready."
     return 0
 }
 
