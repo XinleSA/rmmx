@@ -1,7 +1,7 @@
 #!/bin/bash
 #############################################################################
 # Author: James Barrett | Company: Xinle, LLC
-# Version: 13.7.0
+# Version: 13.8.0
 # Created: March 11, 2025
 # Last Modified: March 11, 2025
 #############################################################################
@@ -73,7 +73,7 @@ print_banner() {
     echo "  ╔══════════════════════════════════════════════════════════════════╗"
     echo "  ║          Xinle 欣乐 — Infrastructure Deployment                 ║"
     echo "  ║          Author: James Barrett | Xinle, LLC                     ║"
-    echo "  ║          Version: 13.7.0                                        ║"
+    echo "  ║          Version: 13.8.0                                        ║"
     echo "  ╚══════════════════════════════════════════════════════════════════╝"
     echo -e "\e[0m"
 }
@@ -89,6 +89,36 @@ print_info()  { echo -e "\e[1;36m  [INFO]  $1\e[0m"; }
 print_ok()    { echo -e "\e[1;32m  [OK]    $1\e[0m"; }
 print_warn()  { echo -e "\e[1;33m  [WARN]  $1\e[0m"; }
 print_error() { echo -e "\e[1;31m  [ERROR] $1\e[0m" >&2; }
+
+disable_needrestart() {
+    # needrestart is a dpkg trigger that runs after every apt install.
+    # It checks if services need restarting and prompts interactively,
+    # hanging forever when stdin is not a terminal (e.g. piped scripts).
+    # NEEDRESTART_MODE=a tells it to restart services automatically without
+    # prompting. We also write a config drop-in so it stays silent for the
+    # full duration of this script. Both are cleaned up on exit.
+    export NEEDRESTART_MODE=a
+    export DEBIAN_FRONTEND=noninteractive
+    export NEEDRESTART_SUSPEND=1
+
+    if [ -d /etc/needrestart/conf.d ]; then
+        cat > /etc/needrestart/conf.d/99-xinle-install.conf << 'NREOF'
+# Xinle install: suppress interactive prompts during automated install
+$nrconf{restart} = 'a';
+$nrconf{kernelhints} = 0;
+$nreof{ucodehints} = 0;
+NREOF
+        print_info "needrestart set to automatic mode for install duration."
+    fi
+
+    # Kill any needrestart already running (from a previous apt call)
+    pkill -KILL -f needrestart 2>/dev/null || true
+}
+
+restore_needrestart() {
+    rm -f /etc/needrestart/conf.d/99-xinle-install.conf 2>/dev/null || true
+    unset NEEDRESTART_MODE NEEDRESTART_SUSPEND 2>/dev/null || true
+}
 
 wait_for_apt() {
     # Ensures apt/dpkg is fully available before running any apt-get command.
@@ -285,6 +315,7 @@ rollback() {
 
     # Re-enable apt timers regardless of rollback state
     systemctl start apt-daily.timer apt-daily-upgrade.timer 2>/dev/null || true
+    restore_needrestart
 
     print_header "ROLLBACK COMPLETE — Pushing error log to GitHub"
     push_log_to_github "failure" || true
@@ -306,6 +337,9 @@ if [ "$(id -u)" -ne 0 ]; then
     print_error "Must be run as root or with sudo."
     exit 1
 fi
+
+# Suppress needrestart interactive prompts for the entire install
+disable_needrestart
 
 # =============================================================================
 #  STAGE 1: COLLECT .ENV VALUES
@@ -621,6 +655,7 @@ echo ""
 
 # Re-enable apt-daily timers now that install is complete
 systemctl start apt-daily.timer apt-daily-upgrade.timer 2>/dev/null || true
+restore_needrestart
 
 # =============================================================================
 #  DEPLOYMENT SUMMARY
