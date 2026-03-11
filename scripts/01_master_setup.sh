@@ -1,7 +1,7 @@
 #!/bin/bash
 #############################################################################
 # Author: James Barrett | Company: Xinle, LLC
-# Version: 13.10.0
+# Version: 13.11.0
 # Created: March 11, 2025
 # Last Modified: March 11, 2025
 #############################################################################
@@ -73,7 +73,7 @@ print_banner() {
     echo "  ╔══════════════════════════════════════════════════════════════════╗"
     echo "  ║          Xinle 欣乐 — Infrastructure Deployment                 ║"
     echo "  ║          Author: James Barrett | Xinle, LLC                     ║"
-    echo "  ║          Version: 13.10.0                                       ║"
+    echo "  ║          Version: 13.11.0                                       ║"
     echo "  ╚══════════════════════════════════════════════════════════════════╝"
     echo -e "\e[0m"
 }
@@ -738,8 +738,33 @@ fi
 # =============================================================================
 print_header "Stage 11: Starting All Docker Services"
 
+# Run docker compose up -d but don't let a healthcheck failure immediately
+# trigger the ERR trap. We want to capture container logs first so the
+# error log (and the operator) can see WHY the container is unhealthy.
+set +e
 docker compose up -d 2>&1
+COMPOSE_EXIT=$?
+set -e
+
 STATE_DOCKER_COMPOSE_UP=true
+
+if [ $COMPOSE_EXIT -ne 0 ]; then
+    echo ""
+    print_error "docker compose up exited with code ${COMPOSE_EXIT} — dumping container logs..."
+    echo ""
+    # Dump logs for every container that is unhealthy or exited
+    for cname in $(docker ps -a --format '{{.Names}}' 2>/dev/null); do
+        cstatus=$(docker inspect --format='{{.State.Status}}' "$cname" 2>/dev/null || echo "unknown")
+        chealth=$(docker inspect --format='{{if .State.Health}}{{.State.Health.Status}}{{end}}' \
+                  "$cname" 2>/dev/null || echo "")
+        if [[ "$cstatus" == "exited" ]] || [[ "$chealth" == "unhealthy" ]]; then
+            echo -e "  ${_RED}━━━━  $cname  [status=$cstatus health=${chealth:-n/a}]  ━━━━${_RST}"
+            docker logs --tail 40 "$cname" 2>&1 | sed 's/^/    /'
+            echo ""
+        fi
+    done
+    exit 1
+fi
 
 echo ""
 print_info "Waiting for all containers to become healthy..."
@@ -778,15 +803,15 @@ while [ $MONITOR_ELAPSED -lt $MONITOR_TIMEOUT ]; do
         break
     fi
 
-    # Check for any unhealthy containers — fail fast
+    # Check for any unhealthy containers — dump logs and fail fast
     UNHEALTHY=$(docker ps --filter health=unhealthy --format '{{.Names}}' 2>/dev/null || true)
     if [ -n "$UNHEALTHY" ]; then
         echo ""
-        print_error "Unhealthy containers detected: $UNHEALTHY"
+        print_error "Unhealthy containers: $UNHEALTHY"
         echo ""
         for uc in $UNHEALTHY; do
-            echo -e "  ${_RED}── $uc logs (last 20 lines) ──${_RST}"
-            docker logs --tail 20 "$uc" 2>&1 | sed 's/^/    /'
+            echo -e "  ${_RED}━━━━  $uc logs (last 40 lines)  ━━━━${_RST}"
+            docker logs --tail 40 "$uc" 2>&1 | sed 's/^/    /'
             echo ""
         done
         exit 1
