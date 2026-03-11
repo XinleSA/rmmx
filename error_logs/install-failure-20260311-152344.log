@@ -1,0 +1,256 @@
+[1;35m
+  ╔══════════════════════════════════════════════════════════════════╗
+  ║          Xinle 欣乐 — Infrastructure Deployment                 ║
+  ║          Author: James Barrett | Xinle, LLC                     ║
+  ║          Version: 13.13.0                                       ║
+  ╚══════════════════════════════════════════════════════════════════╝
+[0m
+[1;36m  [INFO]  needrestart set to automatic mode for install duration.[0m
+
+[1;35m################################################################################[0m
+[1;35m  Stage 1: Environment Configuration[0m
+[1;35m################################################################################[0m
+
+[1;33m  Enter the following values to configure your deployment.[0m
+[1;33m  Passwords are hidden as you type and must be confirmed.[0m
+
+[1;36m  ── Password Strategy ───────────────────────────────────────────────────[0m
+
+  You can use a single shared password for all services (quick setup),
+  or set a unique password for each service (recommended for production).
+
+  Use the same password for all services? [Y/n]: 
+[1;36m  [INFO]  Enter one password — it will be used for all services.[0m
+
+  Shared password (all services): 
+  Confirm Shared password (all services): 
+[1;32m  [OK]    Single password set for all services.[0m
+
+[1;36m  ── PostgreSQL ──────────────────────────────────────────────────────────[0m
+  PostgreSQL database name [xinle_db]:   PostgreSQL username [sar]: 
+[1;36m  ── Application Database Names ──────────────────────────────────────────[0m
+  n8n database name [n8n]:   Forgejo database name [forgejo]: 
+[1;33m  ── Review ──────────────────────────────────────────────────────────────[0m
+
+    POSTGRES_DB:                   xinle_db
+    POSTGRES_USER:                 sar
+    ALL PASSWORDS:                 <single shared password>
+    N8N_DB:                        n8n
+    FORGEJO_DB:                    forgejo
+
+  Proceed with these settings? [Y/n]: [1;36m  [INFO]  Writing .env ...[0m
+[1;32m  [OK]    .env written and secured (chmod 600).[0m
+
+[1;35m################################################################################[0m
+[1;35m  Stage 2: Pre-flight Cleanup[0m
+[1;35m################################################################################[0m
+[1;33m  [WARN]  Removing existing user 'sar'...[0m
+info: Looking for files to backup/remove ...
+info: Removing files ...
+info: Removing crontab ...
+info: Removing user `sar' ...
+[1;33m  [WARN]  Removing existing /docker_apps (including any MySQL/postgres data)...[0m
+[1;36m  [INFO]  Force-wiping /docker_apps via Docker (handles root-owned container data)...[0m
+done
+[1;36m  [INFO]  /docker_apps wiped.[0m
+[1;33m  [WARN]  Removing existing Docker installation...[0m
+Reading package lists...
+Building dependency tree...
+Reading state information...
+The following packages were automatically installed and are no longer required:
+  docker-ce-rootless-extras libslirp0 pigz python3-ntp slirp4netns
+Use 'sudo apt autoremove' to remove them.
+The following packages will be REMOVED:
+  containerd.io* docker-buildx-plugin* docker-ce* docker-ce-cli*
+  docker-compose-plugin*
+0 upgraded, 0 newly installed, 5 to remove and 2 not upgraded.
+After this operation, 377 MB disk space will be freed.
+(Reading database ... (Reading database ... 5%(Reading database ... 10%(Reading database ... 15%(Reading database ... 20%(Reading database ... 25%(Reading database ... 30%(Reading database ... 35%(Reading database ... 40%(Reading database ... 45%(Reading database ... 50%(Reading database ... 55%(Reading database ... 60%(Reading database ... 65%(Reading database ... 70%(Reading database ... 75%(Reading database ... 80%(Reading database ... 85%(Reading database ... 90%(Reading database ... 95%(Reading database ... 100%(Reading database ... 108614 files and directories currently installed.)
+Removing docker-ce (5:29.3.0-1~ubuntu.24.04~noble) ...
+Removing containerd.io (2.2.1-1~ubuntu.24.04~noble) ...
+Removing docker-buildx-plugin (0.31.1-1~ubuntu.24.04~noble) ...
+Removing docker-ce-cli (5:29.3.0-1~ubuntu.24.04~noble) ...
+Removing docker-compose-plugin (5.1.0-1~ubuntu.24.04~noble) ...
+Processing triggers for man-db (2.12.0-4build2) ...
+(Reading database ... (Reading database ... 5%(Reading database ... 10%(Reading database ... 15%(Reading database ... 20%(Reading database ... 25%(Reading database ... 30%(Reading database ... 35%(Reading database ... 40%(Reading database ... 45%(Reading database ... 50%(Reading database ... 55%(Reading database ... 60%(Reading database ... 65%(Reading database ... 70%(Reading database ... 75%(Reading database ... 80%(Reading database ... 85%(Reading database ... 90%(Reading database ... 95%(Reading database ... 100%(Reading database ... 108395 files and directories currently installed.)
+Purging configuration files for docker-ce (5:29.3.0-1~ubuntu.24.04~noble) ...
+Purging configuration files for containerd.io (2.2.1-1~ubuntu.24.04~noble) ...
+packages have been installed but needrestart is suspended
+[1;32m  [OK]    Pre-flight cleanup complete.[0m
+
+[1;35m################################################################################[0m
+[1;35m  Stage 3: Service User 'sar'[0m
+[1;35m################################################################################[0m
+[1;32m  [OK]    User 'sar' created.[0m
+[1;32m  [OK]    User configured.[0m
+
+[1;35m################################################################################[0m
+[1;35m  Stage 4: Timezone & NTP[0m
+[1;35m################################################################################[0m
+[1;36m  [INFO]  Ensuring apt is free...[0m
+[1;36m  [INFO]  Running dpkg --configure -a to repair any interrupted state...[0m
+[1;32m  [OK]    apt is ready.[0m
+Reading package lists...
+Building dependency tree...
+Reading state information...
+cifs-utils is already the newest version (2:7.0-2ubuntu0.2).
+nfs-common is already the newest version (1:2.6.4-3ubuntu5.1).
+The following packages were automatically installed and are no longer required:
+  docker-ce-rootless-extras libslirp0 pigz python3-ntp slirp4netns
+Use 'sudo apt autoremove' to remove them.
+0 upgraded, 0 newly installed, 0 to remove and 2 not upgraded.
+[1;32m  [OK]    Timezone: America/Chicago | NTP: us.pool.ntp.org (via systemd-timesyncd)[0m
+               Local time: Wed 2026-03-11 15:24:12 CDT
+           Universal time: Wed 2026-03-11 20:24:12 UTC
+                 RTC time: Wed 2026-03-11 20:24:11
+                Time zone: America/Chicago (CDT, -0500)
+System clock synchronized: yes
+
+[1;35m################################################################################[0m
+[1;35m  Stage 5: Docker CE & Compose Plugin[0m
+[1;35m################################################################################[0m
+/home/ubuntu/xinle-infra/scripts/01_master_setup.sh: line 579: /usr/bin/docker: No such file or directory
+[1;32m  [OK]    Docker  ready.[0m
+
+[1;35m################################################################################[0m
+[1;35m  Stage 6: Grafana Alloy[0m
+[1;35m################################################################################[0m
+[1;33m  [WARN]  Alloy system package install SKIPPED — will start as Docker container in Stage 10.[0m
+[1;36m  [INFO]  Config: /home/ubuntu/xinle-infra/monitoring/alloy-config.alloy[0m
+
+[1;35m################################################################################[0m
+[1;35m  Stage 7: /docker_apps Directory Structure[0m
+[1;35m################################################################################[0m
+[1;32m  [OK]    Directory structure created.[0m
+
+[1;35m################################################################################[0m
+[1;35m  Stage 8: IPsec Site-to-Site VPN[0m
+[1;35m################################################################################[0m
+
+[1;35m--- Installing strongSwan IPsec VPN ---[0m
+Reading package lists...
+Building dependency tree...
+Reading state information...
+strongswan is already the newest version (5.9.13-2ubuntu4.24.04.1).
+strongswan-starter is already the newest version (5.9.13-2ubuntu4.24.04.1).
+The following packages were automatically installed and are no longer required:
+  docker-ce-rootless-extras libslirp0 pigz python3-ntp slirp4netns
+Use 'sudo apt autoremove' to remove them.
+0 upgraded, 0 newly installed, 0 to remove and 2 not upgraded.
+
+[1;35m--- Enabling Kernel IP Forwarding ---[0m
+net.ipv4.ip_forward = 1
+[1;36m  IP forwarding enabled and persisted in /etc/sysctl.conf.[0m
+
+[1;35m--- Generating Pre-Shared Key ---[0m
+[1;36m  PSK generated.[0m
+
+[1;35m--- Writing IPsec Configuration ---[0m
+[1;36m  ipsec.conf written.[0m
+
+[1;35m--- Creating IPsec Updown Script ---[0m
+[1;36m  Updown script created at /etc/ipsec.d/xinle-updown.sh.[0m
+
+[1;35m--- Configuring Firewall (UFW) ---[0m
+Skipping adding existing rule
+Skipping adding existing rule (v6)
+Skipping adding existing rule
+Skipping adding existing rule (v6)
+[1;36m  xfrm0 FORWARD rules already present in /etc/ufw/before.rules.[0m
+[1;36m  UFW ports opened; iptables FORWARD rules applied and persisted.[0m
+
+[1;35m--- Creating Virtual Tunnel Interface (xfrm0) ---[0m
+[1;36m  xfrm0 interface created (if_id=42), address 172.20.10.1, route to 10.1.0.0/24 added.[0m
+
+[1;35m--- Starting strongSwan (ipsec) Service ---[0m
+Synchronizing state of ipsec.service with SysV service script with /usr/lib/systemd/systemd-sysv-install.
+Executing: /usr/lib/systemd/systemd-sysv-install enable ipsec
+[1;36m  strongSwan started and enabled.[0m
+[1;36m  PSK saved to /etc/ipsec.d/psk.txt for inclusion in deployment summary.[0m
+
+[1;35m################################################################################[0m
+[1;35m  Stage 9: NetLock RMM Configuration[0m
+[1;35m################################################################################[0m
+[1;32m  [OK]    Seeded netlockrmm-server appsettings.json[0m
+[1;32m  [OK]    Seeded netlockrmm-web appsettings.json[0m
+
+[1;35m################################################################################[0m
+[1;35m  Stage 10: Pulling Docker Images[0m
+[1;35m################################################################################[0m
+
+  [1;37m     Service                         Image[0m
+  [2m────────────────────────────────────────────────────[0m
+/home/ubuntu/xinle-infra/scripts/01_master_setup.sh: line 720: /usr/bin/docker: No such file or directory
+
+[1;35m################################################################################[0m
+[1;35m  ROLLBACK INITIATED (exit code: 127) — Wed Mar 11 15:24:15 CDT 2026[0m
+[1;35m################################################################################[0m
+[1;36m  [INFO]  Removing strongSwan IPsec...[0m
+Reading package lists...
+Building dependency tree...
+Reading state information...
+The following packages were automatically installed and are no longer required:
+  docker-ce-rootless-extras libcharon-extauth-plugins libslirp0 libstrongswan
+  libstrongswan-standard-plugins pigz python3-ntp slirp4netns
+  strongswan-charon strongswan-libcharon
+Use 'sudo apt autoremove' to remove them.
+The following packages will be REMOVED:
+  strongswan* strongswan-starter*
+0 upgraded, 0 newly installed, 2 to remove and 2 not upgraded.
+After this operation, 766 kB disk space will be freed.
+(Reading database ... (Reading database ... 5%(Reading database ... 10%(Reading database ... 15%(Reading database ... 20%(Reading database ... 25%(Reading database ... 30%(Reading database ... 35%(Reading database ... 40%(Reading database ... 45%(Reading database ... 50%(Reading database ... 55%(Reading database ... 60%(Reading database ... 65%(Reading database ... 70%(Reading database ... 75%(Reading database ... 80%(Reading database ... 85%(Reading database ... 90%(Reading database ... 95%(Reading database ... 100%(Reading database ... 108391 files and directories currently installed.)
+Removing strongswan (5.9.13-2ubuntu4.24.04.1) ...
+Removing strongswan-starter (5.9.13-2ubuntu4.24.04.1) ...
+Processing triggers for man-db (2.12.0-4build2) ...
+(Reading database ... (Reading database ... 5%(Reading database ... 10%(Reading database ... 15%(Reading database ... 20%(Reading database ... 25%(Reading database ... 30%(Reading database ... 35%(Reading database ... 40%(Reading database ... 45%(Reading database ... 50%(Reading database ... 55%(Reading database ... 60%(Reading database ... 65%(Reading database ... 70%(Reading database ... 75%(Reading database ... 80%(Reading database ... 85%(Reading database ... 90%(Reading database ... 95%(Reading database ... 100%(Reading database ... 108359 files and directories currently installed.)
+Purging configuration files for strongswan-starter (5.9.13-2ubuntu4.24.04.1) ...
+info: Removing crontab ...
+info: Removing user `strongswan' ...
+packages have been installed but needrestart is suspended
+[1;36m  [INFO]  Removing /docker_apps...[0m
+[1;36m  [INFO]  Force-wiping /docker_apps via Docker (handles root-owned container data)...[0m
+[1;36m  [INFO]  /docker_apps wiped.[0m
+[1;36m  [INFO]  Removing Docker...[0m
+Reading package lists...
+Building dependency tree...
+Reading state information...
+Package 'docker-ce' is not installed, so not removed
+Package 'docker-ce-cli' is not installed, so not removed
+Package 'containerd.io' is not installed, so not removed
+Package 'docker-buildx-plugin' is not installed, so not removed
+Package 'docker-compose-plugin' is not installed, so not removed
+The following packages were automatically installed and are no longer required:
+  docker-ce-rootless-extras libcharon-extauth-plugins libslirp0 libstrongswan
+  libstrongswan-standard-plugins pigz python3-ntp slirp4netns
+  strongswan-charon strongswan-libcharon
+Use 'sudo apt autoremove' to remove them.
+0 upgraded, 0 newly installed, 0 to remove and 2 not upgraded.
+[1;36m  [INFO]  Removing custom NTP config...[0m
+Reading package lists...
+Building dependency tree...
+Reading state information...
+The following packages were automatically installed and are no longer required:
+  docker-ce-rootless-extras libcharon-extauth-plugins libslirp0 libstrongswan
+  libstrongswan-standard-plugins pigz python3-ntp slirp4netns
+  strongswan-charon strongswan-libcharon tzdata-legacy
+Use 'sudo apt autoremove' to remove them.
+The following packages will be REMOVED:
+  chrony*
+0 upgraded, 0 newly installed, 1 to remove and 2 not upgraded.
+After this operation, 653 kB disk space will be freed.
+(Reading database ... (Reading database ... 5%(Reading database ... 10%(Reading database ... 15%(Reading database ... 20%(Reading database ... 25%(Reading database ... 30%(Reading database ... 35%(Reading database ... 40%(Reading database ... 45%(Reading database ... 50%(Reading database ... 55%(Reading database ... 60%(Reading database ... 65%(Reading database ... 70%(Reading database ... 75%(Reading database ... 80%(Reading database ... 85%(Reading database ... 90%(Reading database ... 95%(Reading database ... 100%(Reading database ... 108352 files and directories currently installed.)
+Removing chrony (4.5-1ubuntu4.2) ...
+Processing triggers for man-db (2.12.0-4build2) ...
+(Reading database ... (Reading database ... 5%(Reading database ... 10%(Reading database ... 15%(Reading database ... 20%(Reading database ... 25%(Reading database ... 30%(Reading database ... 35%(Reading database ... 40%(Reading database ... 45%(Reading database ... 50%(Reading database ... 55%(Reading database ... 60%(Reading database ... 65%(Reading database ... 70%(Reading database ... 75%(Reading database ... 80%(Reading database ... 85%(Reading database ... 90%(Reading database ... 95%(Reading database ... 100%(Reading database ... 108313 files and directories currently installed.)
+Purging configuration files for chrony (4.5-1ubuntu4.2) ...
+packages have been installed but needrestart is suspended
+[1;36m  [INFO]  Removing user 'sar'...[0m
+info: Looking for files to backup/remove ...
+info: Removing files ...
+info: Removing crontab ...
+info: Removing user `sar' ...
+[1;36m  [INFO]  Removing .env...[0m
+
+[1;35m################################################################################[0m
+[1;35m  ROLLBACK COMPLETE — Pushing error log to GitHub[0m
+[1;35m################################################################################[0m
