@@ -1,7 +1,7 @@
 #!/bin/bash
 #############################################################################
 # Author: James Barrett | Company: Xinle, LLC
-# Version: 13.12.0
+# Version: 13.13.0
 # Created: March 11, 2025
 # Last Modified: March 11, 2025
 #############################################################################
@@ -73,7 +73,7 @@ print_banner() {
     echo "  ╔══════════════════════════════════════════════════════════════════╗"
     echo "  ║          Xinle 欣乐 — Infrastructure Deployment                 ║"
     echo "  ║          Author: James Barrett | Xinle, LLC                     ║"
-    echo "  ║          Version: 13.12.0                                       ║"
+    echo "  ║          Version: 13.13.0                                       ║"
     echo "  ╚══════════════════════════════════════════════════════════════════╝"
     echo -e "\e[0m"
 }
@@ -118,6 +118,22 @@ NREOF
 restore_needrestart() {
     rm -f /etc/needrestart/conf.d/99-xinle-install.conf 2>/dev/null || true
     unset NEEDRESTART_MODE NEEDRESTART_SUSPEND 2>/dev/null || true
+}
+
+force_wipe_docker_data() {
+    # MySQL and PostgreSQL write data as root into bind-mounted host dirs.
+    # A simple rm -rf /docker_apps often fails with "Directory not empty"
+    # because the files are owned by the container's internal UID (999 for
+    # mysql, 70 for postgres) which differs from the host root user context.
+    # Solution: run a temporary alpine container as root to wipe the data,
+    # which has permission to delete files regardless of ownership.
+    local target="${1:-/docker_apps}"
+    if [ -d "$target" ]; then
+        print_info "Force-wiping ${target} via Docker (handles root-owned container data)..."
+        docker run --rm -v "${target}:/wipe" alpine             sh -c "rm -rf /wipe/* /wipe/.[!.]* 2>/dev/null; echo done" 2>/dev/null || true
+        rm -rf "$target" 2>/dev/null || true
+        print_info "${target} wiped."
+    fi
 }
 
 wait_for_apt() {
@@ -282,11 +298,8 @@ rollback() {
     }
     [ "$STATE_DOCKER_DIR_CREATED" = true ] && {
         print_info "Removing ${DOCKER_APPS_DIR}..."
-        # Stop any containers that may have written data into the volume mounts
-        docker compose -f "${PROJECT_DEST}/docker-compose.yml" down -v             --remove-orphans 2>/dev/null || true
-        # Force-remove even if MySQL/postgres wrote data into subdirs
-        rm -rf "$DOCKER_APPS_DIR" || true
-        print_info "${DOCKER_APPS_DIR} removed."
+        (cd "$PROJECT_DEST" && docker compose down -v --remove-orphans 2>/dev/null) || true
+        force_wipe_docker_data "$DOCKER_APPS_DIR"
     }
     [ "$STATE_ALLOY_INSTALLED"    = true ] && {
         print_info "Removing Grafana Alloy..."
@@ -466,9 +479,9 @@ id -u "$TARGET_USER" >/dev/null 2>&1 && {
     deluser --remove-home "$TARGET_USER" || true; traces=true; }
 [ -d "$DOCKER_APPS_DIR" ] && {
     print_warn "Removing existing ${DOCKER_APPS_DIR} (including any MySQL/postgres data)..."
-    # Bring down containers first so they release file locks on data dirs
     docker compose -f "${PROJECT_DEST}/docker-compose.yml" down -v         --remove-orphans 2>/dev/null || true
-    rm -rf "$DOCKER_APPS_DIR" || true; traces=true; }
+    force_wipe_docker_data "$DOCKER_APPS_DIR"
+    traces=true; }
 dpkg-query -W -f='${Status}' docker-ce 2>/dev/null | grep -q "install ok installed" && {
     print_warn "Removing existing Docker installation..."
     apt-get --allow-remove-essential -y purge \
@@ -775,7 +788,8 @@ print_info "Waiting for MySQL to become healthy (up to 90s)..."
 MYSQL_WAIT=0
 while [ $MYSQL_WAIT -lt 90 ]; do
     mhealth=$(docker inspect --format='{{.State.Health.Status}}' mysql 2>/dev/null || echo "unknown")
-    printf "  ${_CYN}⠿${_RST}  mysql health: %-12s  %ds" "$mhealth" "$MYSQL_WAIT"
+    printf "
+  ${_CYN}⠿${_RST}  mysql health: %-12s  %ds" "$mhealth" "$MYSQL_WAIT"
     if [ "$mhealth" = "healthy" ]; then
         echo ""
         print_ok "MySQL is healthy."
