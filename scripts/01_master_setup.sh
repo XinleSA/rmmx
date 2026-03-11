@@ -1,7 +1,7 @@
 #!/bin/bash
 #############################################################################
 # Author: James Barrett | Company: Xinle, LLC
-# Version: 12.0.0
+# Version: 12.1.0
 # Created: March 11, 2025
 # Last Modified: March 11, 2025
 #############################################################################
@@ -75,7 +75,7 @@ print_banner() {
     echo "  ╔══════════════════════════════════════════════════════════════════╗"
     echo "  ║          Xinle 欣乐 — Infrastructure Deployment                 ║"
     echo "  ║          Author: James Barrett | Xinle, LLC                     ║"
-    echo "  ║          Version: 12.0.0                                        ║"
+    echo "  ║          Version: 12.1.0                                        ║"
     echo "  ╚══════════════════════════════════════════════════════════════════╝"
     echo -e "\e[0m"
 }
@@ -161,6 +161,8 @@ push_error_log() {
     # Configure git identity for the push
     (
         cd "$push_dir"
+        # Register as safe directory in case of uid mismatch (root vs ubuntu)
+        git config --global --add safe.directory "$(pwd)" 2>/dev/null || true
         git config user.email "deploy@xinle.biz"
         git config user.name "Xinle Deploy Bot"
         mkdir -p error_logs
@@ -298,6 +300,10 @@ if [ "${1:-}" != "--stage3" ]; then
         print_ok "Repository cloned."
     else
         print_info "Repository already exists. Pulling latest changes..."
+        # Git 2.35.2+ rejects operations on repos owned by a different user.
+        # Since this script runs as root (via sudo) but the repo may be owned
+        # by the ubuntu user, we must register the directory as safe for root.
+        git config --global --add safe.directory "$PROJECT_DEST" 2>/dev/null || true
         (cd "$PROJECT_DEST" && git pull origin main --rebase)
         print_ok "Repository up to date."
     fi
@@ -658,6 +664,8 @@ echo ""
 print_header "Pushing Install Log to GitHub"
 (
     cd "$PROJECT_DEST"
+    # Register as safe directory in case of uid mismatch (root vs ubuntu)
+    git config --global --add safe.directory "$PROJECT_DEST" 2>/dev/null || true
     git config user.email "deploy@xinle.biz"
     git config user.name "Xinle Deploy Bot"
     mkdir -p error_logs
