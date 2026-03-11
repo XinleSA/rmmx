@@ -1,7 +1,7 @@
 #!/bin/bash
 #############################################################################
 # Author: James Barrett | Company: Xinle, LLC
-# Version: 12.2.0
+# Version: 12.3.0
 # Created: March 11, 2025
 # Last Modified: March 11, 2025
 #############################################################################
@@ -38,6 +38,22 @@
 set -euo pipefail
 
 # =============================================================================
+#  SELF-RE-EXEC GUARD — Must be the very first logic in the script
+#  When invoked as "curl ... | sudo bash", bash's stdin IS the pipe (the
+#  script itself). Any 'read' call will consume script bytes instead of
+#  terminal input. Detect this and re-exec from a temp file so that
+#  stdin is properly connected to the terminal (/dev/tty).
+# =============================================================================
+if [ ! -t 0 ]; then
+    SELF_TMP="$(mktemp /tmp/xinle-setup-XXXXXX.sh)"
+    # We are the pipe — slurp remaining stdin into temp file
+    cat > "$SELF_TMP"
+    chmod +x "$SELF_TMP"
+    # Re-exec with stdin explicitly from /dev/tty
+    exec bash "$SELF_TMP" "$@" < /dev/tty
+fi
+
+# ============================================================================
 #  GLOBAL CONFIGURATION
 # =============================================================================
 readonly GITHUB_REPO="XinleSA/rmmx"
@@ -75,7 +91,7 @@ print_banner() {
     echo "  ╔══════════════════════════════════════════════════════════════════╗"
     echo "  ║          Xinle 欣乐 — Infrastructure Deployment                 ║"
     echo "  ║          Author: James Barrett | Xinle, LLC                     ║"
-    echo "  ║          Version: 12.2.0                                        ║"
+    echo "  ║          Version: 12.3.0                                        ║"
     echo "  ╚══════════════════════════════════════════════════════════════════╝"
     echo -e "\e[0m"
 }
