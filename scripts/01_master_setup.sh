@@ -1,7 +1,7 @@
 #!/bin/bash
 #############################################################################
 # Author: James Barrett | Company: Xinle, LLC
-# Version: 13.1.0
+# Version: 13.2.0
 # Created: March 11, 2025
 # Last Modified: March 11, 2025
 #############################################################################
@@ -73,7 +73,7 @@ print_banner() {
     echo "  ╔══════════════════════════════════════════════════════════════════╗"
     echo "  ║          Xinle 欣乐 — Infrastructure Deployment                 ║"
     echo "  ║          Author: James Barrett | Xinle, LLC                     ║"
-    echo "  ║          Version: 13.1.0                                        ║"
+    echo "  ║          Version: 13.2.0                                        ║"
     echo "  ╚══════════════════════════════════════════════════════════════════╝"
     echo -e "\e[0m"
 }
@@ -89,6 +89,38 @@ print_info()  { echo -e "\e[1;36m  [INFO]  $1\e[0m"; }
 print_ok()    { echo -e "\e[1;32m  [OK]    $1\e[0m"; }
 print_warn()  { echo -e "\e[1;33m  [WARN]  $1\e[0m"; }
 print_error() { echo -e "\e[1;31m  [ERROR] $1\e[0m" >&2; }
+
+wait_for_apt() {
+    # Block until all apt/dpkg locks are released, then disable unattended-upgrades
+    # for the duration of the install to prevent lock re-acquisition mid-run.
+    local waited=0
+    local max_wait=120  # seconds
+
+    # Kill unattended-upgrades if running — it holds the lock for minutes
+    if pgrep -x unattended-upgr >/dev/null 2>&1; then
+        print_warn "unattended-upgrades is running. Stopping it for the install..."
+        systemctl stop unattended-upgrades 2>/dev/null || true
+        pkill -x unattended-upgr 2>/dev/null || true
+        sleep 2
+    fi
+
+    # Also disable apt-daily timers during install
+    systemctl stop apt-daily.timer apt-daily-upgrade.timer 2>/dev/null || true
+    systemctl stop apt-daily.service apt-daily-upgrade.service 2>/dev/null || true
+
+    while fuser /var/lib/dpkg/lock-frontend /var/lib/apt/lists/lock >/dev/null 2>&1; do
+        if [ $waited -ge $max_wait ]; then
+            print_error "apt lock held for ${max_wait}s — giving up. Run: sudo lsof /var/lib/dpkg/lock-frontend"
+            return 1
+        fi
+        print_info "Waiting for apt lock... (${waited}s / ${max_wait}s)"
+        sleep 5
+        waited=$((waited + 5))
+    done
+
+    [ $waited -gt 0 ] && print_ok "apt lock released after ${waited}s."
+    return 0
+}
 
 prompt_required() {
     local label="$1" varname="$2" default="${3:-}" value=""
@@ -217,6 +249,9 @@ rollback() {
         print_info "Removing .env..."
         rm -f "${PROJECT_DEST}/.env" || true
     }
+
+    # Re-enable apt timers regardless of rollback state
+    systemctl start apt-daily.timer apt-daily-upgrade.timer 2>/dev/null || true
 
     print_header "ROLLBACK COMPLETE — Pushing error log to GitHub"
     push_log_to_github "failure" || true
@@ -359,6 +394,7 @@ print_ok "User configured."
 print_header "Stage 4: Timezone & NTP"
 
 timedatectl set-timezone "America/Chicago" || true
+wait_for_apt
 apt-get update -qq
 apt-get install -y cifs-utils nfs-common
 
@@ -380,6 +416,7 @@ NTP_EOF
 else
     # Fall back to chrony — works in all VPS/container environments
     print_warn "systemd-timesyncd NTP not supported on this host. Installing chrony..."
+    wait_for_apt
     apt-get install -y chrony
     # Configure chrony to use us.pool.ntp.org
     if grep -q "^pool\|^server" /etc/chrony/chrony.conf 2>/dev/null; then
@@ -401,6 +438,7 @@ timedatectl status | grep -E "Time zone|NTP|synchronized|time" | head -5 || true
 print_header "Stage 5: Docker CE & Compose Plugin"
 
 if ! command -v docker &>/dev/null; then
+    wait_for_apt
     apt-get install -y ca-certificates curl
     install -m 0755 -d /etc/apt/keyrings
     curl -fsSL https://download.docker.com/linux/ubuntu/gpg \
@@ -411,6 +449,7 @@ if ! command -v docker &>/dev/null; then
       https://download.docker.com/linux/ubuntu \
       $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | \
       tee /etc/apt/sources.list.d/docker.list > /dev/null
+    wait_for_apt
     apt-get update -qq
     apt-get install -y \
         docker-ce docker-ce-cli containerd.io \
@@ -428,11 +467,13 @@ mkdir -p /etc/alloy
 cp "${PROJECT_DEST}/monitoring/alloy-config.alloy" /etc/alloy/config.alloy
 
 if ! command -v alloy &>/dev/null; then
+    wait_for_apt
     apt-get install -y wget gpg
     wget -qO- https://apt.grafana.com/gpg.key | \
         gpg --dearmor | tee /usr/share/keyrings/grafana.gpg > /dev/null
     echo "deb [signed-by=/usr/share/keyrings/grafana.gpg] https://apt.grafana.com stable main" | \
         tee /etc/apt/sources.list.d/grafana.list
+    wait_for_apt
     apt-get update -qq
     apt-get install -y alloy
 fi
@@ -515,6 +556,9 @@ sleep 5
 echo ""
 docker compose ps
 echo ""
+
+# Re-enable apt-daily timers now that install is complete
+systemctl start apt-daily.timer apt-daily-upgrade.timer 2>/dev/null || true
 
 # =============================================================================
 #  DEPLOYMENT SUMMARY
