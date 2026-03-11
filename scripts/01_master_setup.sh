@@ -1,7 +1,7 @@
 #!/bin/bash
 #############################################################################
 # Author: James Barrett | Company: Xinle, LLC
-# Version: 13.13.0
+# Version: 13.14.0
 # Created: March 11, 2025
 # Last Modified: March 11, 2025
 #############################################################################
@@ -73,7 +73,7 @@ print_banner() {
     echo "  ╔══════════════════════════════════════════════════════════════════╗"
     echo "  ║          Xinle 欣乐 — Infrastructure Deployment                 ║"
     echo "  ║          Author: James Barrett | Xinle, LLC                     ║"
-    echo "  ║          Version: 13.13.0                                       ║"
+    echo "  ║          Version: 13.14.0                                       ║"
     echo "  ╚══════════════════════════════════════════════════════════════════╝"
     echo -e "\e[0m"
 }
@@ -575,6 +575,25 @@ if ! command -v docker &>/dev/null; then
         docker-ce docker-ce-cli containerd.io \
         docker-buildx-plugin docker-compose-plugin
 fi
+
+# Refresh PATH and shell command cache so docker is found immediately
+# without needing a new shell session. Docker installs to /usr/bin but
+# the running shell may have cached a 'not found' result for that path.
+export PATH="/usr/bin:/usr/local/bin:$PATH"
+hash -r 2>/dev/null || true
+
+# Wait for the Docker daemon socket to be ready — systemd starts it
+# asynchronously after package install and it may not be available yet.
+DOCKER_WAIT=0
+while [ $DOCKER_WAIT -lt 30 ]; do
+    if docker info &>/dev/null; then
+        break
+    fi
+    print_info "Waiting for Docker daemon... (${DOCKER_WAIT}s)"
+    sleep 2
+    DOCKER_WAIT=$((DOCKER_WAIT + 2))
+done
+
 STATE_DOCKER_INSTALLED=true
 print_ok "Docker $(docker --version) ready."
 
