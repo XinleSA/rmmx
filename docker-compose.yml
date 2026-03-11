@@ -1,10 +1,15 @@
 # =============================================================================
 #  Xinle 欣乐 — Master Docker Compose File
 # =============================================================================
-#  Version: 7.1
+#  Author:        James Barrett | Company: Xinle, LLC
+#  Version:       8.0.0
+#  Created:       March 11, 2025
+#  Last Modified: March 11, 2025
+# =============================================================================
 #
-#  This file defines all services, networks, and volumes for the Xinle
-#  self-hosted infrastructure stack.
+#  PREREQUISITES:
+#    Copy .env.example to .env and fill in all values before starting:
+#      cp .env.example .env
 #
 #  To start all services:  docker compose up -d
 #  To stop all services:   docker compose down
@@ -30,8 +35,15 @@ services:
     volumes:
       - /docker_apps/npm/data:/data
       - /docker_apps/npm/letsencrypt:/etc/letsencrypt
+      - /storage:/storage:ro
     networks:
       - xinle_network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:81"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
 
   # ---------------------------------------------------------------------------
   #  2. n8n — Workflow Automation
@@ -43,6 +55,7 @@ services:
     restart: unless-stopped
     volumes:
       - /docker_apps/n8n:/home/node/.n8n
+      - /storage:/storage:ro
     networks:
       - xinle_network
     environment:
@@ -53,9 +66,12 @@ services:
       - DB_TYPE=postgresdb
       - DB_POSTGRESDB_HOST=postgres
       - DB_POSTGRESDB_PORT=5432
-      - DB_POSTGRESDB_DATABASE=${POSTGRES_DB:-n8n}
-      - DB_POSTGRESDB_USER=${POSTGRES_USER:-sar}
-      - DB_POSTGRESDB_PASSWORD=${POSTGRES_PASSWORD:-tb,Xinle2026!}
+      - DB_POSTGRESDB_DATABASE=${N8N_DB:-n8n}
+      - DB_POSTGRESDB_USER=${POSTGRES_USER}
+      - DB_POSTGRESDB_PASSWORD=${POSTGRES_PASSWORD}
+    depends_on:
+      postgres:
+        condition: service_healthy
 
   # ---------------------------------------------------------------------------
   #  3. Forgejo — Self-Hosted Git Service
@@ -67,6 +83,7 @@ services:
     restart: unless-stopped
     volumes:
       - /docker_apps/forgejo:/data
+      - /storage:/storage:ro
     networks:
       - xinle_network
     environment:
@@ -74,10 +91,13 @@ services:
       - USER_GID=1000
       - FORGEJO__database__DB_TYPE=postgres
       - FORGEJO__database__HOST=postgres:5432
-      - FORGEJO__database__NAME=${POSTGRES_DB:-forgejo}
-      - FORGEJO__database__USER=${POSTGRES_USER:-sar}
-      - FORGEJO__database__PASSWD=${POSTGRES_PASSWORD:-tb,Xinle2026!}
+      - FORGEJO__database__NAME=${FORGEJO_DB:-forgejo}
+      - FORGEJO__database__USER=${POSTGRES_USER}
+      - FORGEJO__database__PASSWD=${POSTGRES_PASSWORD}
       - FORGEJO__server__ROOT_URL=https://rmmx.xinle.biz/git
+    depends_on:
+      postgres:
+        condition: service_healthy
 
   # ---------------------------------------------------------------------------
   #  4. NetLock RMM — Remote Monitoring & Management
@@ -93,16 +113,18 @@ services:
       - NETLOCK_MYSQL_PORT=3306
       - NETLOCK_MYSQL_DATABASE=netlockrmm
       - NETLOCK_MYSQL_USER=sar
-      - NETLOCK_MYSQL_PASSWORD=${MYSQL_PASSWORD:-tb,Xinle2026!}
+      - NETLOCK_MYSQL_PASSWORD=${MYSQL_PASSWORD}
     volumes:
       - /docker_apps/netlockrmm/server/appsettings.json:/app/appsettings.json:ro
       - /docker_apps/netlockrmm/server/internal:/app/internal
       - /docker_apps/netlockrmm/server/files:/app/www/private/files
       - /docker_apps/netlockrmm/server/logs:/var/log/netlockrmm
+      - /storage:/storage:ro
     networks:
       - xinle_network
     depends_on:
-      - mysql
+      mysql:
+        condition: service_healthy
 
   netlockrmm-web:
     image: nicomak101/netlock-rmm-web-console:latest
@@ -112,6 +134,7 @@ services:
       - TZ=America/Chicago
     volumes:
       - /docker_apps/netlockrmm/web/appsettings.json:/app/appsettings.json:ro
+      - /storage:/storage:ro
     networks:
       - xinle_network
     depends_on:
@@ -126,40 +149,60 @@ services:
     restart: unless-stopped
     volumes:
       - /docker_apps/postgres:/var/lib/postgresql/data
+      - ./scripts/postgres-init:/docker-entrypoint-initdb.d:ro
+      - /storage:/storage:ro
     networks:
       - xinle_network
     environment:
       - POSTGRES_DB=${POSTGRES_DB:-xinle_db}
-      - POSTGRES_USER=${POSTGRES_USER:-sar}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-tb,Xinle2026!}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB:-xinle_db}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
 
   pgadmin:
     image: dpage/pgadmin4:latest
     container_name: pgadmin
     restart: unless-stopped
+    user: "5050:5050"
     volumes:
       - /docker_apps/pgadmin:/var/lib/pgadmin
+      - /storage:/storage:ro
     networks:
       - xinle_network
     environment:
       - PGADMIN_DEFAULT_EMAIL=admin@xinle.biz
-      - PGADMIN_DEFAULT_PASSWORD=${PGADMIN_PASSWORD:-tb,Xinle2026!}
+      - PGADMIN_DEFAULT_PASSWORD=${PGADMIN_PASSWORD}
       - PGADMIN_CONFIG_SERVER_MODE=False
+    depends_on:
+      postgres:
+        condition: service_healthy
 
   mysql:
     image: mysql:8.0
     container_name: mysql
     restart: unless-stopped
-    command: --default-authentication-plugin=mysql_native_password
+    command: --mysql-native-password=ON
     volumes:
       - /docker_apps/mysql:/var/lib/mysql
+      - /storage:/storage:ro
     networks:
       - xinle_network
     environment:
-      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD:-tb,Xinle2026!}
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
       - MYSQL_DATABASE=netlockrmm
       - MYSQL_USER=sar
-      - MYSQL_PASSWORD=${MYSQL_PASSWORD:-tb,Xinle2026!}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "sar", "-p${MYSQL_PASSWORD}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
 
   phpmyadmin:
     image: phpmyadmin:latest
@@ -170,7 +213,12 @@ services:
     environment:
       - PMA_HOST=mysql
       - PMA_PORT=3306
-      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD:-tb,Xinle2026!}
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+    volumes:
+      - /storage:/storage:ro
+    depends_on:
+      mysql:
+        condition: service_healthy
 
 # =============================================================================
 #  Networks & Volumes
@@ -182,4 +230,3 @@ networks:
     ipam:
       config:
         - subnet: 172.20.0.0/16
-          

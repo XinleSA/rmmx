@@ -68,7 +68,7 @@
     "Port": 3306,
     "Database": "netlockrmm",
     "User": "sar",
-    "Password": "tb,Xinle2026!",
+    "Password": "${MYSQL_PASSWORD}",
     "SslMode": "None",
     "AdditionalConnectionParameters": ""
   },

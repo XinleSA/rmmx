@@ -1,6 +1,6 @@
 # Xinle 欣乐 Self-Hosted Infrastructure
 
-**Version 8.2** | **Target OS: Ubuntu 24.04.4 LTS (Noble Numbat)**
+**Version 9.0.0** | **Author:** James Barrett | **Company:** Xinle, LLC | **Target OS: Ubuntu 24.04.4 LTS (Noble Numbat)** | **Last Modified:** March 11, 2025
 
 > **[🌐 View Landing Page Preview →](https://xinlesa.github.io/rmmx/)**
 
@@ -18,6 +18,7 @@ This repository contains the complete, automated setup for the Xinle 欣乐 self
 6.  [Network File Shares](#6--network-file-shares)
 7.  [IPsec Site-to-Site VPN](#7--ipsec-site-to-site-vpn)
 8.  [Updating the System](#8--updating-the-system)
+9.  [IPsec VPN Next Steps](./07_ipsec_vpn_next_steps.md)
 9.  [Server Reinstallation](#9--server-reinstallation)
 10. [GitHub to Forgejo Migration](#10--github-to-forgejo-migration)
 

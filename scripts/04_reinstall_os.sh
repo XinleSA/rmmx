@@ -1,12 +1,16 @@
 #!/bin/bash
-# =============================================================================
-#  Xinle 欣乐 — Remote OS Reinstallation Script
-# =============================================================================
-#  Version: 6.0
+#############################################################################
+# Author: James Barrett | Company: Xinle, LLC
+# Version: 6.1.0
+# Created: March 11, 2025
+# Last Modified: March 11, 2025
+#############################################################################
 #
-#  This script completely and irrevocably reinstalls the operating system on
-#  this server to a fresh Ubuntu 24.04.4 LTS (Noble Numbat), directly from
-#  an active SSH session — no control panel access required.
+#  Xinle 欣乐 — Remote OS Reinstallation Script
+#
+#  Completely and irrevocably reinstalls the operating system on this server
+#  to a fresh Ubuntu 24.04.4 LTS (Noble Numbat), directly from an active
+#  SSH session — no control panel access required.
 #
 #  HOW IT WORKS
 #  ─────────────────────────────────────────────────────────────────────────────
@@ -18,9 +22,9 @@
 #     wipes the disk, installs Ubuntu 24.04.4, then reboots into the new OS.
 #
 #  WARNING: THIS IS EXTREMELY DESTRUCTIVE. IT WILL ERASE THE ENTIRE DISK.
-# =============================================================================
+#############################################################################
 
-set -e
+set -euo pipefail
 
 # --- Configuration ---
 readonly GITHUB_REPO="XinleSA/rmmx"
@@ -181,3 +185,5 @@ print_warn "You will need to retrieve the new root password from the ServerOptim
 echo ""
 echo -e "  When ready, type \e[1;31mreboot\e[0m and press Enter."
 echo ""
+
+exit 0

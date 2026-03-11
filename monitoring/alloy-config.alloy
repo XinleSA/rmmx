@@ -1,0 +1,53 @@
+// =============================================================================
+//  Xinle 欣乐 — Grafana Alloy Metrics Configuration
+// =============================================================================
+//  Author:        James Barrett | Company: Xinle, LLC
+//  Version:       2.0.0
+//  Created:       March 11, 2025
+//  Last Modified: March 11, 2025
+// =============================================================================
+//
+//  Collects host and container metrics and forwards them to the remote
+//  Prometheus instance at fenix.xinle.biz.
+//
+//  Exporters enabled:
+//    - node_exporter : Host OS metrics (CPU, memory, disk, network)
+//    - cadvisor      : Docker container resource metrics
+// =============================================================================
+
+// --- Node Exporter (host metrics) ---
+prometheus.exporter.unix "node" {
+  // Defaults are appropriate for standard host monitoring
+}
+
+prometheus.scrape "node" {
+  targets    = prometheus.exporter.unix.node.targets
+  forward_to = [prometheus.remote_write.fenix.receiver]
+  scrape_interval = "60s"
+  job_name = "node"
+}
+
+// --- cAdvisor (Docker container metrics) ---
+prometheus.exporter.cadvisor "containers" {
+  // No additional configuration needed for local Docker socket
+}
+
+prometheus.scrape "cadvisor" {
+  targets    = prometheus.exporter.cadvisor.containers.targets
+  forward_to = [prometheus.remote_write.fenix.receiver]
+  scrape_interval = "60s"
+  job_name = "cadvisor"
+}
+
+// --- Remote Write to Fenix ---
+prometheus.remote_write "fenix" {
+  endpoint {
+    url = "https://fenix.xinle.biz/prometheus/api/v1/write"
+
+    // Uncomment and fill in if your remote Prometheus requires authentication:
+    // basic_auth {
+    //   username = env("ALLOY_REMOTE_USER")
+    //   password = env("ALLOY_REMOTE_PASSWORD")
+    // }
+  }
+}

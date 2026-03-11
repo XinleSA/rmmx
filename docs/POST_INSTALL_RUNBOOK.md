@@ -1,6 +1,6 @@
 # Xinle RMMX: Post-Installation Runbook
 
-**Version 1.1**
+**Version 1.2.0** | **Author:** James Barrett | **Company:** Xinle, LLC | **Last Modified:** March 11, 2025
 
 ---
 
@@ -11,6 +11,11 @@ This document provides the essential manual steps required to fully configure yo
 ## Prerequisites
 
 - You have a fresh Ubuntu 24.04.4 LTS server.
+- You have created and filled in your `.env` file from the template:
+  ```bash
+  cp .env.example .env
+  # Edit .env and fill in all passwords before running setup
+  ```
 - You have successfully executed the master setup script without it rolling back:
   ```bash
   curl -fsSL https://raw.githubusercontent.com/XinleSA/rmmx/main/scripts/01_master_setup.sh | sudo bash
@@ -186,3 +191,12 @@ These services are ready to use. You just need to connect them to their respecti
 | MariaDB | `mariadb` | `3306` | `sar` | `tb,Xinle2026!` |
 
 > **Security Note**: The hostnames (`postgres`, `mariadb`) are the Docker service names. They are only resolvable from within the Docker network (`xinle_network`), which pgAdmin and phpMyAdmin are part of. This is a secure configuration.
+
+---
+
+## IPsec VPN — Detailed Next Steps
+
+For full post-install VPN verification, UDM Pro configuration, and troubleshooting, see the dedicated guide:
+
+📄 [`docs/07_ipsec_vpn_next_steps.md`](./07_ipsec_vpn_next_steps.md)
+

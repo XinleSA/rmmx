@@ -2,7 +2,12 @@
 # =============================================================================
 #  Xinle 欣乐 — System & Docker Update Script
 # =============================================================================
-#  Version: 8.2
+#############################################################################
+# Author: James Barrett | Company: Xinle, LLC
+# Version: 8.2.0
+# Created: March 11, 2025
+# Last Modified: March 11, 2025
+#############################################################################
 #
 #  Updates all system components:
 #    1. Itself (by pulling from Git).
@@ -127,7 +132,7 @@ fi
 # MAIN UPDATE PROCESS
 # =============================================================================
 
-print_header "Xinle 欣乐 — System & Docker Update (v8.1)"
+print_header "Xinle 欣乐 — System & Docker Update (v8.2)"
 echo "  Mode: $([ "$AUTO_YES" = true ] && echo "Unattended (-y)" || echo "Interactive")"
 echo "  Time: $(date '+%Y-%m-%d %H:%M:%S %Z')"
 

@@ -1,8 +1,12 @@
 #!/bin/bash
-# =============================================================================
+#############################################################################
+# Author: James Barrett | Company: Xinle, LLC
+# Version: 7.4.0
+# Created: March 11, 2025
+# Last Modified: March 11, 2025
+#############################################################################
+#
 #  Xinle 欣乐 — IPsec Site-to-Site VPN Setup Script
-# =============================================================================
-#  Version: 7.3
 #
 #  Called by 01_master_setup.sh as part of the main install flow.
 #  All fixes are built in — no manual post-install steps required.
@@ -28,9 +32,9 @@
 #       - Re-applies iptables FORWARD rules on every boot
 #  9. Starts and enables the ipsec service
 # 10. Saves the PSK to /etc/ipsec.d/psk.txt for the master script summary
-# =============================================================================
+#############################################################################
 
-set -e
+set -euo pipefail
 
 # --- Configuration ---
 readonly AI_SITE_SUBNET="10.1.0.0/24"
