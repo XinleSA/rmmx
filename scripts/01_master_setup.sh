@@ -1,7 +1,7 @@
 #!/bin/bash
 #############################################################################
 # Author: James Barrett | Company: Xinle, LLC
-# Version: 13.15.0
+# Version: 13.16.0
 # Created: March 11, 2025
 # Last Modified: March 11, 2025
 #############################################################################
@@ -91,7 +91,7 @@ print_banner() {
     echo "  ╔══════════════════════════════════════════════════════════════════╗"
     echo "  ║          Xinle 欣乐 — Infrastructure Deployment                 ║"
     echo "  ║          Author: James Barrett | Xinle, LLC                     ║"
-    echo "  ║          Version: 13.15.0                                       ║"
+    echo "  ║          Version: 13.16.0                                       ║"
     echo "  ╚══════════════════════════════════════════════════════════════════╝"
     echo -e "\e[0m"
 }
@@ -223,10 +223,10 @@ prompt_required() {
     local label="$1" varname="$2" default="${3:-}" value=""
     while [ -z "$value" ]; do
         if [ -n "$default" ]; then
-            read -rp "  ${label} [${default}]: " value
+            read -rp "  ${label} [${default}]: " value </dev/tty
             value="${value:-$default}"
         else
-            read -rp "  ${label}: " value
+            read -rp "  ${label}: " value </dev/tty
         fi
         [ -z "$value" ] && print_warn "This field is required."
     done
@@ -236,9 +236,9 @@ prompt_required() {
 prompt_password() {
     local label="$1" varname="$2" pass1="" pass2=""
     while true; do
-        read -rsp "  ${label}: " pass1; echo ""
+        read -rsp "  ${label}: " pass1 </dev/tty; echo ""
         [ -z "$pass1" ] && { print_warn "Password cannot be empty."; continue; }
-        read -rsp "  Confirm ${label}: " pass2; echo ""
+        read -rsp "  Confirm ${label}: " pass2 </dev/tty; echo ""
         [ "$pass1" = "$pass2" ] && break
         print_warn "Passwords do not match. Please try again."
     done
@@ -393,7 +393,7 @@ echo ""
 echo "  You can use a single shared password for all services (quick setup),"
 echo "  or set a unique password for each service (recommended for production)."
 echo ""
-read -rp "  Use the same password for all services? [Y/n]: " PW_SAME
+read -rp "  Use the same password for all services? [Y/n]: " PW_SAME </dev/tty
 PW_SAME="${PW_SAME:-Y}"
 echo ""
 
@@ -451,7 +451,7 @@ fi
 printf "    %-30s %s\n" "N8N_DB:"              "$ENV_N8N_DB"
 printf "    %-30s %s\n" "FORGEJO_DB:"          "$ENV_FORGEJO_DB"
 echo ""
-read -rp "  Proceed with these settings? [Y/n]: " CONFIRM
+read -rp "  Proceed with these settings? [Y/n]: " CONFIRM </dev/tty
 CONFIRM="${CONFIRM:-Y}"
 if [[ ! "$CONFIRM" =~ ^[Yy]$ ]]; then
     print_warn "Aborted by user. No changes made."
