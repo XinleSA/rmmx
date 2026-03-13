@@ -1,7 +1,7 @@
 #!/bin/bash
 #############################################################################
 # Author: James Barrett | Company: Xinle, LLC
-# Version: 7.6.0
+# Version: 7.7.0
 # Created: March 11, 2025
 # Last Modified: March 11, 2025
 #############################################################################
@@ -133,7 +133,16 @@ print_info "Updown script created at /etc/ipsec.d/xinle-updown.sh."
 # --- 7. Configure Firewall ---
 print_header "Configuring Firewall (UFW)"
 
-# Ensure UFW is installed — minimal VPS images may not include it by default
+# Ensure UFW is installed — minimal VPS images may not include it by default.
+# First, purge iptables-persistent/netfilter-persistent if present — they
+# conflict with UFW and their post-remove scripts can leave iptables in a
+# broken state that causes UFW's own post-install to fail.
+for _conflict_pkg in iptables-persistent netfilter-persistent; do
+    if dpkg-query -W -f='${Status}' "$_conflict_pkg" 2>/dev/null | grep -q 'install ok installed'; then
+        print_info "Purging conflicting package '${_conflict_pkg}' before UFW install..."
+        DEBIAN_FRONTEND=noninteractive apt-get -y purge "$_conflict_pkg" 2>/dev/null || true
+    fi
+done
 if ! command -v ufw &>/dev/null; then
     print_info "UFW not found. Installing..."
     DEBIAN_FRONTEND=noninteractive apt-get install -y ufw
