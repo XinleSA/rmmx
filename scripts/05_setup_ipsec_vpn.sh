@@ -1,7 +1,7 @@
 #!/bin/bash
 #############################################################################
 # Author: James Barrett | Company: Xinle, LLC
-# Version: 7.5.0
+# Version: 7.6.0
 # Created: March 11, 2025
 # Last Modified: March 11, 2025
 #############################################################################
@@ -132,6 +132,16 @@ print_info "Updown script created at /etc/ipsec.d/xinle-updown.sh."
 
 # --- 7. Configure Firewall ---
 print_header "Configuring Firewall (UFW)"
+
+# Ensure UFW is installed — minimal VPS images may not include it by default
+if ! command -v ufw &>/dev/null; then
+    print_info "UFW not found. Installing..."
+    DEBIAN_FRONTEND=noninteractive apt-get install -y ufw
+    # Allow SSH before enabling so we don't lock ourselves out
+    ufw allow OpenSSH
+    ufw --force enable
+    print_info "UFW installed and enabled."
+fi
 
 # Open IKE and NAT-T ports for IPsec
 ufw allow 500/udp  comment 'IPsec IKE'

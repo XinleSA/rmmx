@@ -1,7 +1,7 @@
 #!/bin/bash
 #############################################################################
 # Author: James Barrett | Company: Xinle, LLC
-# Version: 13.16.0
+# Version: 13.17.0
 # Created: March 11, 2025
 # Last Modified: March 11, 2025
 #############################################################################
@@ -91,7 +91,7 @@ print_banner() {
     echo "  ╔══════════════════════════════════════════════════════════════════╗"
     echo "  ║          Xinle 欣乐 — Infrastructure Deployment                 ║"
     echo "  ║          Author: James Barrett | Xinle, LLC                     ║"
-    echo "  ║          Version: 13.16.0                                       ║"
+    echo "  ║          Version: 13.17.0                                       ║"
     echo "  ╚══════════════════════════════════════════════════════════════════╝"
     echo -e "\e[0m"
 }
@@ -574,8 +574,20 @@ timedatectl status | grep -E "Time zone|NTP|synchronized|time" | head -5 || true
 #  STAGE 5: DOCKER
 # =============================================================================
 print_header "Stage 5: Docker CE & Compose Plugin"
-
-if ! command -v docker &>/dev/null; then
+# Determine whether a full Docker install is needed.
+# We check for the docker-ce package (not just the binary) because a previous
+# failed run may have left a broken partial install where the binary is missing
+# but the apt guard would skip reinstall.
+DOCKER_PKG_OK=false
+if dpkg-query -W -f='${Status}' docker-ce 2>/dev/null | grep -q 'install ok installed'; then
+    if command -v docker &>/dev/null && docker info &>/dev/null 2>&1; then
+        DOCKER_PKG_OK=true
+        print_info "Docker already installed and running — skipping install."
+    else
+        print_warn "Docker package present but binary missing or daemon not running. Reinstalling..."
+    fi
+fi
+if [ "$DOCKER_PKG_OK" = false ]; then
     wait_for_apt
     apt-get install -y ca-certificates curl
     install -m 0755 -d /etc/apt/keyrings
