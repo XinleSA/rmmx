@@ -1,7 +1,7 @@
 #!/bin/bash
 #############################################################################
 # Author: James Barrett | Company: Xinle, LLC
-# Version: 13.22.0
+# Version: 13.23.0
 # Created: March 11, 2025
 # Last Modified: March 13, 2026
 #############################################################################
@@ -510,6 +510,43 @@ for _pkg in ufw iptables-persistent netfilter-persistent; do
         DEBIAN_FRONTEND=noninteractive apt-get -y purge "$_pkg" 2>/dev/null || true
         traces=true; } || true
 done
+# Remove stale Docker networks and bridges from previous failed installs.
+# A failed install leaves orphan bridge interfaces (e.g. br-XXXXXXXX) with the
+# same 172.20.0.0/16 subnet as the current live network.  Linux then installs
+# two kernel routes for that prefix and the stale (DOWN) bridge wins, black-
+# holing all container traffic even though docker ps shows containers as "Up".
+if command -v docker >/dev/null 2>&1; then
+    # Collect all Docker-managed bridge names from live networks
+    live_bridges=$(docker network ls -q 2>/dev/null | \
+        xargs -I{} docker network inspect {} --format '{{.Options.com.docker.network.bridge.name}} {{.Id}}' 2>/dev/null | \
+        awk '{print $1}' | grep -v '^$' || true)
+    # Also collect bridges referenced by running containers
+    live_bridges+=$(docker network ls --format '{{.ID}}' 2>/dev/null | \
+        xargs -I{} sh -c 'docker network inspect {} --format "br-{{slice .Id 0 12}}" 2>/dev/null' || true)
+
+    # Find all br-* interfaces that are DOWN (no carrier) and not in live_bridges
+    while IFS= read -r iface; do
+        iface_name=$(echo "$iface" | awk '{print $1}')
+        # Skip if this bridge is still referenced by a live Docker network
+        if echo "$live_bridges" | grep -qF "$iface_name"; then
+            continue
+        fi
+        state=$(ip link show "$iface_name" 2>/dev/null | grep -oE 'state [A-Z]+' | awk '{print $2}')
+        if [ "$state" = "DOWN" ]; then
+            print_warn "Removing stale Docker bridge: ${iface_name} (state DOWN, not in any live network)"
+            ip route del 172.20.0.0/16 dev "$iface_name" 2>/dev/null || true
+            ip route del 172.17.0.0/16 dev "$iface_name" 2>/dev/null || true
+            ip link set "$iface_name" down 2>/dev/null || true
+            ip link delete "$iface_name" 2>/dev/null || true
+            traces=true
+        fi
+    done < <(ip link show type bridge 2>/dev/null | grep '^[0-9]' | awk '{print $2}' | tr -d ':'  | grep '^br-')
+
+    # Prune dangling Docker networks (networks with no containers)
+    docker network prune -f 2>/dev/null | grep -v '^$' | while IFS= read -r line; do
+        print_info "Docker network prune: $line"; done || true
+fi
+
 # Remove stale xinle-firewall.service if present from a previous run
 [ -f /etc/systemd/system/xinle-firewall.service ] && {
     systemctl stop xinle-firewall.service 2>/dev/null || true
