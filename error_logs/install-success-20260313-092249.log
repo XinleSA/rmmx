@@ -1,0 +1,408 @@
+[1;35m
+  ╔══════════════════════════════════════════════════════════════════╗
+  ║          Xinle 欣乐 — Infrastructure Deployment                 ║
+  ║          Author: James Barrett | Xinle, LLC                     ║
+  ║          Version: 13.19.0                                       ║
+  ╚══════════════════════════════════════════════════════════════════╝
+[0m
+[1;36m  [INFO]  needrestart set to automatic mode for install duration.[0m
+
+[1;35m################################################################################[0m
+[1;35m  Stage 1: Environment Configuration[0m
+[1;35m################################################################################[0m
+
+[1;33m  Enter the following values to configure your deployment.[0m
+[1;33m  Passwords are hidden as you type and must be confirmed.[0m
+
+[1;36m  ── Password Strategy ───────────────────────────────────────────────────[0m
+
+  You can use a single shared password for all services (quick setup),
+  or set a unique password for each service (recommended for production).
+
+  Use the same password for all services? [Y/n]: 
+[1;36m  [INFO]  Enter one password — it will be used for all services.[0m
+
+  Shared password (all services): 
+  Confirm Shared password (all services): 
+[1;32m  [OK]    Single password set for all services.[0m
+
+[1;36m  ── PostgreSQL ──────────────────────────────────────────────────────────[0m
+  PostgreSQL database name [xinle_db]:   PostgreSQL username [sar]: 
+[1;36m  ── Application Database Names ──────────────────────────────────────────[0m
+  n8n database name [n8n]:   Forgejo database name [forgejo]: 
+[1;33m  ── Review ──────────────────────────────────────────────────────────────[0m
+
+    POSTGRES_DB:                   xinle_db
+    POSTGRES_USER:                 sar
+    ALL PASSWORDS:                 <single shared password>
+    N8N_DB:                        n8n
+    FORGEJO_DB:                    forgejo
+
+  Proceed with these settings? [Y/n]: [1;36m  [INFO]  Writing .env ...[0m
+[1;32m  [OK]    .env written and secured (chmod 600).[0m
+
+[1;35m################################################################################[0m
+[1;35m  Stage 2: Pre-flight Cleanup[0m
+[1;35m################################################################################[0m
+[1;33m  [WARN]  Removing 'ufw' from previous run (conflicts with Docker iptables)...[0m
+Reading package lists...
+Building dependency tree...
+Reading state information...
+The following packages were automatically installed and are no longer required:
+  docker-ce-rootless-extras libslirp0 pigz python3-ntp slirp4netns
+  tzdata-legacy
+Use 'sudo apt autoremove' to remove them.
+The following packages will be REMOVED:
+  ufw*
+0 upgraded, 0 newly installed, 1 to remove and 20 not upgraded.
+After this operation, 869 kB disk space will be freed.
+(Reading database ... (Reading database ... 5%(Reading database ... 10%(Reading database ... 15%(Reading database ... 20%(Reading database ... 25%(Reading database ... 30%(Reading database ... 35%(Reading database ... 40%(Reading database ... 45%(Reading database ... 50%(Reading database ... 55%(Reading database ... 60%(Reading database ... 65%(Reading database ... 70%(Reading database ... 75%(Reading database ... 80%(Reading database ... 85%(Reading database ... 90%(Reading database ... 95%(Reading database ... 100%(Reading database ... 108338 files and directories currently installed.)
+Removing ufw (0.36.2-6) ...
+Processing triggers for man-db (2.12.0-4build2) ...
+(Reading database ... (Reading database ... 5%(Reading database ... 10%(Reading database ... 15%(Reading database ... 20%(Reading database ... 25%(Reading database ... 30%(Reading database ... 35%(Reading database ... 40%(Reading database ... 45%(Reading database ... 50%(Reading database ... 55%(Reading database ... 60%(Reading database ... 65%(Reading database ... 70%(Reading database ... 75%(Reading database ... 80%(Reading database ... 85%(Reading database ... 90%(Reading database ... 95%(Reading database ... 100%(Reading database ... 108243 files and directories currently installed.)
+Purging configuration files for ufw (0.36.2-6) ...
+Processing triggers for rsyslog (8.2312.0-3ubuntu9.1) ...
+packages have been installed but needrestart is suspended
+[1;32m  [OK]    Pre-flight cleanup complete.[0m
+
+[1;35m################################################################################[0m
+[1;35m  Stage 3: Service User 'sar'[0m
+[1;35m################################################################################[0m
+[1;32m  [OK]    User 'sar' created.[0m
+[1;32m  [OK]    User configured.[0m
+
+[1;35m################################################################################[0m
+[1;35m  Stage 4: Timezone & NTP[0m
+[1;35m################################################################################[0m
+[1;36m  [INFO]  Ensuring apt is free...[0m
+[1;36m  [INFO]  Running dpkg --configure -a to repair any interrupted state...[0m
+[1;32m  [OK]    apt is ready.[0m
+Reading package lists...
+Building dependency tree...
+Reading state information...
+cifs-utils is already the newest version (2:7.0-2ubuntu0.2).
+nfs-common is already the newest version (1:2.6.4-3ubuntu5.1).
+The following packages were automatically installed and are no longer required:
+  docker-ce-rootless-extras libslirp0 pigz python3-ntp slirp4netns
+  tzdata-legacy
+Use 'sudo apt autoremove' to remove them.
+0 upgraded, 0 newly installed, 0 to remove and 20 not upgraded.
+[1;33m  [WARN]  systemd-timesyncd NTP not supported on this host. Installing chrony...[0m
+[1;36m  [INFO]  Ensuring apt is free...[0m
+[1;36m  [INFO]  Running dpkg --configure -a to repair any interrupted state...[0m
+[1;32m  [OK]    apt is ready.[0m
+Reading package lists...
+Building dependency tree...
+Reading state information...
+The following packages were automatically installed and are no longer required:
+  docker-ce-rootless-extras libslirp0 pigz python3-ntp slirp4netns
+Use 'sudo apt autoremove' to remove them.
+The following NEW packages will be installed:
+  chrony
+0 upgraded, 1 newly installed, 0 to remove and 20 not upgraded.
+Need to get 0 B/316 kB of archives.
+After this operation, 653 kB of additional disk space will be used.
+Selecting previously unselected package chrony.
+(Reading database ... (Reading database ... 5%(Reading database ... 10%(Reading database ... 15%(Reading database ... 20%(Reading database ... 25%(Reading database ... 30%(Reading database ... 35%(Reading database ... 40%(Reading database ... 45%(Reading database ... 50%(Reading database ... 55%(Reading database ... 60%(Reading database ... 65%(Reading database ... 70%(Reading database ... 75%(Reading database ... 80%(Reading database ... 85%(Reading database ... 90%(Reading database ... 95%(Reading database ... 100%(Reading database ... 108238 files and directories currently installed.)
+Preparing to unpack .../chrony_4.5-1ubuntu4.2_amd64.deb ...
+Unpacking chrony (4.5-1ubuntu4.2) ...
+Setting up chrony (4.5-1ubuntu4.2) ...
+
+Creating config file /etc/chrony/chrony.conf with new version
+
+Creating config file /etc/chrony/chrony.keys with new version
+dpkg-statoverride: warning: --update given but /var/log/chrony does not exist
+Created symlink /etc/systemd/system/chronyd.service → /usr/lib/systemd/system/chrony.service.
+Created symlink /etc/systemd/system/multi-user.target.wants/chrony.service → /usr/lib/systemd/system/chrony.service.
+Processing triggers for man-db (2.12.0-4build2) ...
+packages have been installed but needrestart is suspended
+[1;32m  [OK]    Timezone: America/Chicago | NTP: us.pool.ntp.org (via chrony)[0m
+               Local time: Fri 2026-03-13 09:23:23 CDT
+           Universal time: Fri 2026-03-13 14:23:23 UTC
+                 RTC time: Fri 2026-03-13 14:23:23
+                Time zone: America/Chicago (CDT, -0500)
+System clock synchronized: no
+
+[1;35m################################################################################[0m
+[1;35m  Stage 5: Docker CE & Compose Plugin[0m
+[1;35m################################################################################[0m
+[1;36m  [INFO]  Ensuring apt is free...[0m
+[1;36m  [INFO]  Running dpkg --configure -a to repair any interrupted state...[0m
+[1;32m  [OK]    apt is ready.[0m
+Reading package lists...
+Building dependency tree...
+Reading state information...
+ca-certificates is already the newest version (20240203).
+curl is already the newest version (8.5.0-2ubuntu10.8).
+The following packages were automatically installed and are no longer required:
+  docker-ce-rootless-extras libslirp0 pigz python3-ntp slirp4netns
+Use 'sudo apt autoremove' to remove them.
+0 upgraded, 0 newly installed, 0 to remove and 20 not upgraded.
+[1;36m  [INFO]  Ensuring apt is free...[0m
+[1;36m  [INFO]  Running dpkg --configure -a to repair any interrupted state...[0m
+[1;32m  [OK]    apt is ready.[0m
+Reading package lists...
+Building dependency tree...
+Reading state information...
+The following package was automatically installed and is no longer required:
+  python3-ntp
+Use 'sudo apt autoremove' to remove it.
+Suggested packages:
+  cgroupfs-mount | cgroup-lite docker-model-plugin
+The following NEW packages will be installed:
+  containerd.io docker-buildx-plugin docker-ce docker-ce-cli
+  docker-compose-plugin
+0 upgraded, 5 newly installed, 0 to remove and 20 not upgraded.
+Need to get 0 B/90.6 MB of archives.
+After this operation, 377 MB of additional disk space will be used.
+Selecting previously unselected package containerd.io.
+(Reading database ... (Reading database ... 5%(Reading database ... 10%(Reading database ... 15%(Reading database ... 20%(Reading database ... 25%(Reading database ... 30%(Reading database ... 35%(Reading database ... 40%(Reading database ... 45%(Reading database ... 50%(Reading database ... 55%(Reading database ... 60%(Reading database ... 65%(Reading database ... 70%(Reading database ... 75%(Reading database ... 80%(Reading database ... 85%(Reading database ... 90%(Reading database ... 95%(Reading database ... 100%(Reading database ... 108298 files and directories currently installed.)
+Preparing to unpack .../containerd.io_2.2.2-1~ubuntu.24.04~noble_amd64.deb ...
+Unpacking containerd.io (2.2.2-1~ubuntu.24.04~noble) ...
+Selecting previously unselected package docker-ce-cli.
+Preparing to unpack .../docker-ce-cli_5%3a29.3.0-1~ubuntu.24.04~noble_amd64.deb ...
+Unpacking docker-ce-cli (5:29.3.0-1~ubuntu.24.04~noble) ...
+Selecting previously unselected package docker-ce.
+Preparing to unpack .../docker-ce_5%3a29.3.0-1~ubuntu.24.04~noble_amd64.deb ...
+Unpacking docker-ce (5:29.3.0-1~ubuntu.24.04~noble) ...
+Selecting previously unselected package docker-buildx-plugin.
+Preparing to unpack .../docker-buildx-plugin_0.31.1-1~ubuntu.24.04~noble_amd64.deb ...
+Unpacking docker-buildx-plugin (0.31.1-1~ubuntu.24.04~noble) ...
+Selecting previously unselected package docker-compose-plugin.
+Preparing to unpack .../docker-compose-plugin_5.1.0-1~ubuntu.24.04~noble_amd64.deb ...
+Unpacking docker-compose-plugin (5.1.0-1~ubuntu.24.04~noble) ...
+Setting up docker-buildx-plugin (0.31.1-1~ubuntu.24.04~noble) ...
+Setting up containerd.io (2.2.2-1~ubuntu.24.04~noble) ...
+Created symlink /etc/systemd/system/multi-user.target.wants/containerd.service → /usr/lib/systemd/system/containerd.service.
+Setting up docker-compose-plugin (5.1.0-1~ubuntu.24.04~noble) ...
+Setting up docker-ce-cli (5:29.3.0-1~ubuntu.24.04~noble) ...
+Setting up docker-ce (5:29.3.0-1~ubuntu.24.04~noble) ...
+Created symlink /etc/systemd/system/multi-user.target.wants/docker.service → /usr/lib/systemd/system/docker.service.
+Created symlink /etc/systemd/system/sockets.target.wants/docker.socket → /usr/lib/systemd/system/docker.socket.
+Processing triggers for man-db (2.12.0-4build2) ...
+packages have been installed but needrestart is suspended
+[1;32m  [OK]    Docker Docker version 29.3.0, build 5927d80 ready.[0m
+
+[1;35m################################################################################[0m
+[1;35m  Stage 6: Grafana Alloy[0m
+[1;35m################################################################################[0m
+[1;33m  [WARN]  Alloy system package install SKIPPED — will start as Docker container in Stage 10.[0m
+[1;36m  [INFO]  Config: /home/ubuntu/xinle-infra/monitoring/alloy-config.alloy[0m
+
+[1;35m################################################################################[0m
+[1;35m  Stage 7: /docker_apps Directory Structure[0m
+[1;35m################################################################################[0m
+[1;32m  [OK]    Directory structure created.[0m
+
+[1;35m################################################################################[0m
+[1;35m  Stage 8: IPsec Site-to-Site VPN[0m
+[1;35m################################################################################[0m
+
+[1;35m--- Installing strongSwan IPsec VPN ---[0m
+Reading package lists...
+Building dependency tree...
+Reading state information...
+strongswan is already the newest version (5.9.13-2ubuntu4.24.04.1).
+strongswan-starter is already the newest version (5.9.13-2ubuntu4.24.04.1).
+The following package was automatically installed and is no longer required:
+  python3-ntp
+Use 'sudo apt autoremove' to remove it.
+0 upgraded, 0 newly installed, 0 to remove and 20 not upgraded.
+
+[1;35m--- Enabling Kernel IP Forwarding ---[0m
+net.ipv4.ip_forward = 1
+[1;36m  IP forwarding enabled and persisted in /etc/sysctl.conf.[0m
+
+[1;35m--- Generating Pre-Shared Key ---[0m
+[1;36m  PSK generated.[0m
+
+[1;35m--- Writing IPsec Configuration ---[0m
+[1;36m  ipsec.conf written.[0m
+
+[1;35m--- Creating IPsec Updown Script ---[0m
+[1;36m  Updown script created at /etc/ipsec.d/xinle-updown.sh.[0m
+
+[1;35m--- Configuring Firewall (iptables-persistent) ---[0m
+[1;36m  Installing iptables-persistent...[0m
+Reading package lists...
+Building dependency tree...
+Reading state information...
+The following package was automatically installed and is no longer required:
+  python3-ntp
+Use 'sudo apt autoremove' to remove it.
+The following additional packages will be installed:
+  netfilter-persistent
+The following NEW packages will be installed:
+  iptables-persistent netfilter-persistent
+0 upgraded, 2 newly installed, 0 to remove and 20 not upgraded.
+Need to get 14.3 kB of archives.
+After this operation, 89.1 kB of additional disk space will be used.
+Get:1 http://archive.ubuntu.com/ubuntu noble/universe amd64 netfilter-persistent all 1.0.20 [7402 B]
+Get:2 http://archive.ubuntu.com/ubuntu noble/universe amd64 iptables-persistent all 1.0.20 [6946 B]
+Preconfiguring packages ...
+Fetched 14.3 kB in 0s (63.2 kB/s)
+Selecting previously unselected package netfilter-persistent.
+(Reading database ... (Reading database ... 5%(Reading database ... 10%(Reading database ... 15%(Reading database ... 20%(Reading database ... 25%(Reading database ... 30%(Reading database ... 35%(Reading database ... 40%(Reading database ... 45%(Reading database ... 50%(Reading database ... 55%(Reading database ... 60%(Reading database ... 65%(Reading database ... 70%(Reading database ... 75%(Reading database ... 80%(Reading database ... 85%(Reading database ... 90%(Reading database ... 95%(Reading database ... 100%(Reading database ... 108521 files and directories currently installed.)
+Preparing to unpack .../netfilter-persistent_1.0.20_all.deb ...
+Unpacking netfilter-persistent (1.0.20) ...
+Selecting previously unselected package iptables-persistent.
+Preparing to unpack .../iptables-persistent_1.0.20_all.deb ...
+Unpacking iptables-persistent (1.0.20) ...
+Setting up netfilter-persistent (1.0.20) ...
+Setting up iptables-persistent (1.0.20) ...
+Processing triggers for man-db (2.12.0-4build2) ...
+packages have been installed but needrestart is suspended
+run-parts: executing /usr/share/netfilter-persistent/plugins.d/15-ip4tables save
+run-parts: executing /usr/share/netfilter-persistent/plugins.d/25-ip6tables save
+[1;36m  iptables rules persisted via netfilter-persistent.[0m
+
+[1;35m--- Creating Virtual Tunnel Interface (xfrm0) ---[0m
+[1;36m  xfrm0 interface created (if_id=42), address 172.20.10.1, route to 10.1.0.0/24 added.[0m
+
+[1;35m--- Starting strongSwan (ipsec) Service ---[0m
+Synchronizing state of ipsec.service with SysV service script with /usr/lib/systemd/systemd-sysv-install.
+Executing: /usr/lib/systemd/systemd-sysv-install enable ipsec
+[1;36m  strongSwan started and enabled.[0m
+[1;36m  PSK saved to /etc/ipsec.d/psk.txt for inclusion in deployment summary.[0m
+
+[1;35m################################################################################[0m
+[1;35m  Stage 9: NetLock RMM Configuration[0m
+[1;35m################################################################################[0m
+[1;32m  [OK]    Seeded netlockrmm-server appsettings.json[0m
+[1;32m  [OK]    Seeded netlockrmm-web appsettings.json[0m
+
+[1;35m################################################################################[0m
+[1;35m  Stage 10: Pulling Docker Images[0m
+[1;35m################################################################################[0m
+
+  [1;37m     Service                         Image[0m
+  [2m────────────────────────────────────────────────────[0m
+  [1;36m⠋[0m  [1/10] MySQL 8.0                          [1;36m⠙[0m  [1/10] MySQL 8.0                          [1;36m⠹[0m  [1/10] MySQL 8.0                          [1;36m⠸[0m  [1/10] MySQL 8.0                          [1;36m⠼[0m  [1/10] MySQL 8.0                          [1;32m✔[0m  [1/10] MySQL 8.0                         [2mdone[0m
+  [1;36m⠋[0m  [2/10] PostgreSQL 16                      [1;36m⠙[0m  [2/10] PostgreSQL 16                      [1;36m⠹[0m  [2/10] PostgreSQL 16                      [1;36m⠸[0m  [2/10] PostgreSQL 16                      [1;36m⠼[0m  [2/10] PostgreSQL 16                      [1;32m✔[0m  [2/10] PostgreSQL 16                     [2mdone[0m
+  [1;36m⠋[0m  [3/10] n8n Workflow Engine                [1;36m⠙[0m  [3/10] n8n Workflow Engine                [1;36m⠹[0m  [3/10] n8n Workflow Engine                [1;36m⠸[0m  [3/10] n8n Workflow Engine                [1;36m⠼[0m  [3/10] n8n Workflow Engine                [1;36m⠴[0m  [3/10] n8n Workflow Engine                [1;36m⠦[0m  [3/10] n8n Workflow Engine                [1;36m⠧[0m  [3/10] n8n Workflow Engine                [1;36m⠇[0m  [3/10] n8n Workflow Engine                [1;36m⠏[0m  [3/10] n8n Workflow Engine                [1;36m⠋[0m  [3/10] n8n Workflow Engine                [1;36m⠙[0m  [3/10] n8n Workflow Engine                [1;36m⠹[0m  [3/10] n8n Workflow Engine                [1;36m⠸[0m  [3/10] n8n Workflow Engine                [1;36m⠼[0m  [3/10] n8n Workflow Engine                [1;36m⠴[0m  [3/10] n8n Workflow Engine                [1;36m⠦[0m  [3/10] n8n Workflow Engine                [1;36m⠧[0m  [3/10] n8n Workflow Engine                [1;36m⠇[0m  [3/10] n8n Workflow Engine                [1;36m⠏[0m  [3/10] n8n Workflow Engine                [1;36m⠋[0m  [3/10] n8n Workflow Engine                [1;36m⠙[0m  [3/10] n8n Workflow Engine                [1;36m⠹[0m  [3/10] n8n Workflow Engine                [1;36m⠸[0m  [3/10] n8n Workflow Engine                [1;36m⠼[0m  [3/10] n8n Workflow Engine                [1;36m⠴[0m  [3/10] n8n Workflow Engine                [1;36m⠦[0m  [3/10] n8n Workflow Engine                [1;36m⠧[0m  [3/10] n8n Workflow Engine                [1;36m⠇[0m  [3/10] n8n Workflow Engine                [1;36m⠏[0m  [3/10] n8n Workflow Engine                [1;36m⠋[0m  [3/10] n8n Workflow Engine                [1;36m⠙[0m  [3/10] n8n Workflow Engine                [1;36m⠹[0m  [3/10] n8n Workflow Engine                [1;36m⠸[0m  [3/10] n8n Workflow Engine                [1;36m⠼[0m  [3/10] n8n Workflow Engine                [1;36m⠴[0m  [3/10] n8n Workflow Engine                [1;36m⠦[0m  [3/10] n8n Workflow Engine                [1;36m⠧[0m  [3/10] n8n Workflow Engine                [1;36m⠇[0m  [3/10] n8n Workflow Engine                [1;36m⠏[0m  [3/10] n8n Workflow Engine                [1;36m⠋[0m  [3/10] n8n Workflow Engine                [1;36m⠙[0m  [3/10] n8n Workflow Engine                [1;36m⠹[0m  [3/10] n8n Workflow Engine                [1;36m⠸[0m  [3/10] n8n Workflow Engine                [1;36m⠼[0m  [3/10] n8n Workflow Engine                [1;36m⠴[0m  [3/10] n8n Workflow Engine                [1;36m⠦[0m  [3/10] n8n Workflow Engine                [1;36m⠧[0m  [3/10] n8n Workflow Engine                [1;36m⠇[0m  [3/10] n8n Workflow Engine                [1;36m⠏[0m  [3/10] n8n Workflow Engine                [1;36m⠋[0m  [3/10] n8n Workflow Engine                [1;36m⠙[0m  [3/10] n8n Workflow Engine                [1;36m⠹[0m  [3/10] n8n Workflow Engine                [1;36m⠸[0m  [3/10] n8n Workflow Engine                [1;36m⠼[0m  [3/10] n8n Workflow Engine                [1;36m⠴[0m  [3/10] n8n Workflow Engine                [1;36m⠦[0m  [3/10] n8n Workflow Engine                [1;36m⠧[0m  [3/10] n8n Workflow Engine                [1;36m⠇[0m  [3/10] n8n Workflow Engine                [1;36m⠏[0m  [3/10] n8n Workflow Engine                [1;36m⠋[0m  [3/10] n8n Workflow Engine                [1;36m⠙[0m  [3/10] n8n Workflow Engine                [1;36m⠹[0m  [3/10] n8n Workflow Engine                [1;36m⠸[0m  [3/10] n8n Workflow Engine                [1;36m⠼[0m  [3/10] n8n Workflow Engine                [1;36m⠴[0m  [3/10] n8n Workflow Engine                [1;36m⠦[0m  [3/10] n8n Workflow Engine                [1;36m⠧[0m  [3/10] n8n Workflow Engine                [1;36m⠇[0m  [3/10] n8n Workflow Engine                [1;36m⠏[0m  [3/10] n8n Workflow Engine                [1;36m⠋[0m  [3/10] n8n Workflow Engine                [1;36m⠙[0m  [3/10] n8n Workflow Engine                [1;36m⠹[0m  [3/10] n8n Workflow Engine                [1;36m⠸[0m  [3/10] n8n Workflow Engine                [1;36m⠼[0m  [3/10] n8n Workflow Engine                [1;36m⠴[0m  [3/10] n8n Workflow Engine                [1;36m⠦[0m  [3/10] n8n Workflow Engine                [1;36m⠧[0m  [3/10] n8n Workflow Engine                [1;36m⠇[0m  [3/10] n8n Workflow Engine                [1;36m⠏[0m  [3/10] n8n Workflow Engine                [1;36m⠋[0m  [3/10] n8n Workflow Engine                [1;36m⠙[0m  [3/10] n8n Workflow Engine                [1;36m⠹[0m  [3/10] n8n Workflow Engine                [1;36m⠸[0m  [3/10] n8n Workflow Engine                [1;36m⠼[0m  [3/10] n8n Workflow Engine                [1;36m⠴[0m  [3/10] n8n Workflow Engine                [1;36m⠦[0m  [3/10] n8n Workflow Engine                [1;36m⠧[0m  [3/10] n8n Workflow Engine                [1;36m⠇[0m  [3/10] n8n Workflow Engine                [1;36m⠏[0m  [3/10] n8n Workflow Engine                [1;36m⠋[0m  [3/10] n8n Workflow Engine                [1;36m⠙[0m  [3/10] n8n Workflow Engine                [1;36m⠹[0m  [3/10] n8n Workflow Engine                [1;36m⠸[0m  [3/10] n8n Workflow Engine                [1;36m⠼[0m  [3/10] n8n Workflow Engine                [1;36m⠴[0m  [3/10] n8n Workflow Engine                [1;36m⠦[0m  [3/10] n8n Workflow Engine                [1;36m⠧[0m  [3/10] n8n Workflow Engine                [1;36m⠇[0m  [3/10] n8n Workflow Engine                [1;36m⠏[0m  [3/10] n8n Workflow Engine                [1;36m⠋[0m  [3/10] n8n Workflow Engine                [1;36m⠙[0m  [3/10] n8n Workflow Engine                [1;36m⠹[0m  [3/10] n8n Workflow Engine                [1;36m⠸[0m  [3/10] n8n Workflow Engine                [1;36m⠼[0m  [3/10] n8n Workflow Engine                [1;36m⠴[0m  [3/10] n8n Workflow Engine                [1;36m⠦[0m  [3/10] n8n Workflow Engine                [1;36m⠧[0m  [3/10] n8n Workflow Engine                [1;36m⠇[0m  [3/10] n8n Workflow Engine                [1;36m⠏[0m  [3/10] n8n Workflow Engine                [1;36m⠋[0m  [3/10] n8n Workflow Engine                [1;36m⠙[0m  [3/10] n8n Workflow Engine                [1;36m⠹[0m  [3/10] n8n Workflow Engine                [1;36m⠸[0m  [3/10] n8n Workflow Engine                [1;36m⠼[0m  [3/10] n8n Workflow Engine                [1;36m⠴[0m  [3/10] n8n Workflow Engine                [1;36m⠦[0m  [3/10] n8n Workflow Engine                [1;36m⠧[0m  [3/10] n8n Workflow Engine                [1;36m⠇[0m  [3/10] n8n Workflow Engine                [1;36m⠏[0m  [3/10] n8n Workflow Engine                [1;36m⠋[0m  [3/10] n8n Workflow Engine                [1;36m⠙[0m  [3/10] n8n Workflow Engine                [1;36m⠹[0m  [3/10] n8n Workflow Engine                [1;36m⠸[0m  [3/10] n8n Workflow Engine                [1;36m⠼[0m  [3/10] n8n Workflow Engine                [1;36m⠴[0m  [3/10] n8n Workflow Engine                [1;36m⠦[0m  [3/10] n8n Workflow Engine                [1;36m⠧[0m  [3/10] n8n Workflow Engine                [1;36m⠇[0m  [3/10] n8n Workflow Engine                [1;36m⠏[0m  [3/10] n8n Workflow Engine                [1;36m⠋[0m  [3/10] n8n Workflow Engine                [1;36m⠙[0m  [3/10] n8n Workflow Engine                [1;36m⠹[0m  [3/10] n8n Workflow Engine                [1;36m⠸[0m  [3/10] n8n Workflow Engine                [1;36m⠼[0m  [3/10] n8n Workflow Engine                [1;36m⠴[0m  [3/10] n8n Workflow Engine                [1;36m⠦[0m  [3/10] n8n Workflow Engine                [1;36m⠧[0m  [3/10] n8n Workflow Engine                [1;36m⠇[0m  [3/10] n8n Workflow Engine                [1;36m⠏[0m  [3/10] n8n Workflow Engine                [1;36m⠋[0m  [3/10] n8n Workflow Engine                [1;36m⠙[0m  [3/10] n8n Workflow Engine                [1;36m⠹[0m  [3/10] n8n Workflow Engine                [1;36m⠸[0m  [3/10] n8n Workflow Engine                [1;36m⠼[0m  [3/10] n8n Workflow Engine                [1;36m⠴[0m  [3/10] n8n Workflow Engine                [1;36m⠦[0m  [3/10] n8n Workflow Engine                [1;36m⠧[0m  [3/10] n8n Workflow Engine                [1;36m⠇[0m  [3/10] n8n Workflow Engine                [1;36m⠏[0m  [3/10] n8n Workflow Engine                [1;36m⠋[0m  [3/10] n8n Workflow Engine                [1;36m⠙[0m  [3/10] n8n Workflow Engine                [1;36m⠹[0m  [3/10] n8n Workflow Engine                [1;36m⠸[0m  [3/10] n8n Workflow Engine                [1;36m⠼[0m  [3/10] n8n Workflow Engine                [1;36m⠴[0m  [3/10] n8n Workflow Engine                [1;36m⠦[0m  [3/10] n8n Workflow Engine                [1;36m⠧[0m  [3/10] n8n Workflow Engine                [1;36m⠇[0m  [3/10] n8n Workflow Engine                [1;36m⠏[0m  [3/10] n8n Workflow Engine                [1;36m⠋[0m  [3/10] n8n Workflow Engine                [1;36m⠙[0m  [3/10] n8n Workflow Engine                [1;36m⠹[0m  [3/10] n8n Workflow Engine                [1;36m⠸[0m  [3/10] n8n Workflow Engine                [1;36m⠼[0m  [3/10] n8n Workflow Engine                [1;36m⠴[0m  [3/10] n8n Workflow Engine                [1;36m⠦[0m  [3/10] n8n Workflow Engine                [1;36m⠧[0m  [3/10] n8n Workflow Engine                [1;36m⠇[0m  [3/10] n8n Workflow Engine                [1;36m⠏[0m  [3/10] n8n Workflow Engine                [1;36m⠋[0m  [3/10] n8n Workflow Engine                [1;36m⠙[0m  [3/10] n8n Workflow Engine                [1;36m⠹[0m  [3/10] n8n Workflow Engine                [1;36m⠸[0m  [3/10] n8n Workflow Engine                [1;36m⠼[0m  [3/10] n8n Workflow Engine                [1;36m⠴[0m  [3/10] n8n Workflow Engine                [1;36m⠦[0m  [3/10] n8n Workflow Engine                [1;36m⠧[0m  [3/10] n8n Workflow Engine                [1;36m⠇[0m  [3/10] n8n Workflow Engine                [1;36m⠏[0m  [3/10] n8n Workflow Engine                [1;36m⠋[0m  [3/10] n8n Workflow Engine                [1;36m⠙[0m  [3/10] n8n Workflow Engine                [1;36m⠹[0m  [3/10] n8n Workflow Engine                [1;36m⠸[0m  [3/10] n8n Workflow Engine                [1;36m⠼[0m  [3/10] n8n Workflow Engine                [1;36m⠴[0m  [3/10] n8n Workflow Engine                [1;36m⠦[0m  [3/10] n8n Workflow Engine                [1;36m⠧[0m  [3/10] n8n Workflow Engine                [1;36m⠇[0m  [3/10] n8n Workflow Engine                [1;36m⠏[0m  [3/10] n8n Workflow Engine                [1;36m⠋[0m  [3/10] n8n Workflow Engine                [1;36m⠙[0m  [3/10] n8n Workflow Engine                [1;36m⠹[0m  [3/10] n8n Workflow Engine                [1;36m⠸[0m  [3/10] n8n Workflow Engine                [1;36m⠼[0m  [3/10] n8n Workflow Engine                [1;36m⠴[0m  [3/10] n8n Workflow Engine                [1;36m⠦[0m  [3/10] n8n Workflow Engine                [1;36m⠧[0m  [3/10] n8n Workflow Engine                [1;36m⠇[0m  [3/10] n8n Workflow Engine                [1;36m⠏[0m  [3/10] n8n Workflow Engine                [1;36m⠋[0m  [3/10] n8n Workflow Engine                [1;36m⠙[0m  [3/10] n8n Workflow Engine                [1;36m⠹[0m  [3/10] n8n Workflow Engine                [1;36m⠸[0m  [3/10] n8n Workflow Engine                [1;36m⠼[0m  [3/10] n8n Workflow Engine                [1;36m⠴[0m  [3/10] n8n Workflow Engine                [1;36m⠦[0m  [3/10] n8n Workflow Engine                [1;36m⠧[0m  [3/10] n8n Workflow Engine                [1;36m⠇[0m  [3/10] n8n Workflow Engine                [1;36m⠏[0m  [3/10] n8n Workflow Engine                [1;36m⠋[0m  [3/10] n8n Workflow Engine                [1;36m⠙[0m  [3/10] n8n Workflow Engine                [1;36m⠹[0m  [3/10] n8n Workflow Engine                [1;36m⠸[0m  [3/10] n8n Workflow Engine                [1;36m⠼[0m  [3/10] n8n Workflow Engine                [1;36m⠴[0m  [3/10] n8n Workflow Engine                [1;36m⠦[0m  [3/10] n8n Workflow Engine                [1;36m⠧[0m  [3/10] n8n Workflow Engine                [1;36m⠇[0m  [3/10] n8n Workflow Engine                [1;36m⠏[0m  [3/10] n8n Workflow Engine                [1;36m⠋[0m  [3/10] n8n Workflow Engine                [1;36m⠙[0m  [3/10] n8n Workflow Engine                [1;36m⠹[0m  [3/10] n8n Workflow Engine                [1;36m⠸[0m  [3/10] n8n Workflow Engine                [1;36m⠼[0m  [3/10] n8n Workflow Engine                [1;36m⠴[0m  [3/10] n8n Workflow Engine                [1;36m⠦[0m  [3/10] n8n Workflow Engine                [1;36m⠧[0m  [3/10] n8n Workflow Engine                [1;36m⠇[0m  [3/10] n8n Workflow Engine                [1;36m⠏[0m  [3/10] n8n Workflow Engine                [1;36m⠋[0m  [3/10] n8n Workflow Engine                [1;36m⠙[0m  [3/10] n8n Workflow Engine                [1;36m⠹[0m  [3/10] n8n Workflow Engine                [1;36m⠸[0m  [3/10] n8n Workflow Engine                [1;36m⠼[0m  [3/10] n8n Workflow Engine                [1;36m⠴[0m  [3/10] n8n Workflow Engine                [1;36m⠦[0m  [3/10] n8n Workflow Engine                [1;36m⠧[0m  [3/10] n8n Workflow Engine                [1;36m⠇[0m  [3/10] n8n Workflow Engine                [1;36m⠏[0m  [3/10] n8n Workflow Engine                [1;36m⠋[0m  [3/10] n8n Workflow Engine                [1;36m⠙[0m  [3/10] n8n Workflow Engine                [1;36m⠹[0m  [3/10] n8n Workflow Engine                [1;36m⠸[0m  [3/10] n8n Workflow Engine                [1;36m⠼[0m  [3/10] n8n Workflow Engine                [1;36m⠴[0m  [3/10] n8n Workflow Engine                [1;36m⠦[0m  [3/10] n8n Workflow Engine                [1;36m⠧[0m  [3/10] n8n Workflow Engine                [1;36m⠇[0m  [3/10] n8n Workflow Engine                [1;36m⠏[0m  [3/10] n8n Workflow Engine                [1;36m⠋[0m  [3/10] n8n Workflow Engine                [1;36m⠙[0m  [3/10] n8n Workflow Engine                [1;36m⠹[0m  [3/10] n8n Workflow Engine                [1;36m⠸[0m  [3/10] n8n Workflow Engine                [1;36m⠼[0m  [3/10] n8n Workflow Engine                [1;36m⠴[0m  [3/10] n8n Workflow Engine                [1;36m⠦[0m  [3/10] n8n Workflow Engine                [1;36m⠧[0m  [3/10] n8n Workflow Engine                [1;36m⠇[0m  [3/10] n8n Workflow Engine                [1;36m⠏[0m  [3/10] n8n Workflow Engine                [1;36m⠋[0m  [3/10] n8n Workflow Engine                [1;36m⠙[0m  [3/10] n8n Workflow Engine                [1;36m⠹[0m  [3/10] n8n Workflow Engine                [1;36m⠸[0m  [3/10] n8n Workflow Engine                [1;36m⠼[0m  [3/10] n8n Workflow Engine                [1;36m⠴[0m  [3/10] n8n Workflow Engine                [1;36m⠦[0m  [3/10] n8n Workflow Engine                [1;36m⠧[0m  [3/10] n8n Workflow Engine                [1;36m⠇[0m  [3/10] n8n Workflow Engine                [1;36m⠏[0m  [3/10] n8n Workflow Engine                [1;36m⠋[0m  [3/10] n8n Workflow Engine                [1;36m⠙[0m  [3/10] n8n Workflow Engine                [1;36m⠹[0m  [3/10] n8n Workflow Engine                [1;36m⠸[0m  [3/10] n8n Workflow Engine                [1;36m⠼[0m  [3/10] n8n Workflow Engine                [1;36m⠴[0m  [3/10] n8n Workflow Engine                [1;36m⠦[0m  [3/10] n8n Workflow Engine                [1;36m⠧[0m  [3/10] n8n Workflow Engine                [1;36m⠇[0m  [3/10] n8n Workflow Engine                [1;36m⠏[0m  [3/10] n8n Workflow Engine                [1;36m⠋[0m  [3/10] n8n Workflow Engine                [1;36m⠙[0m  [3/10] n8n Workflow Engine                [1;36m⠹[0m  [3/10] n8n Workflow Engine                [1;36m⠸[0m  [3/10] n8n Workflow Engine                [1;36m⠼[0m  [3/10] n8n Workflow Engine                [1;36m⠴[0m  [3/10] n8n Workflow Engine                [1;36m⠦[0m  [3/10] n8n Workflow Engine                [1;36m⠧[0m  [3/10] n8n Workflow Engine                [1;36m⠇[0m  [3/10] n8n Workflow Engine                [1;36m⠏[0m  [3/10] n8n Workflow Engine                [1;36m⠋[0m  [3/10] n8n Workflow Engine                [1;36m⠙[0m  [3/10] n8n Workflow Engine                [1;36m⠹[0m  [3/10] n8n Workflow Engine                [1;36m⠸[0m  [3/10] n8n Workflow Engine                [1;36m⠼[0m  [3/10] n8n Workflow Engine                [1;36m⠴[0m  [3/10] n8n Workflow Engine                [1;36m⠦[0m  [3/10] n8n Workflow Engine                [1;36m⠧[0m  [3/10] n8n Workflow Engine                [1;36m⠇[0m  [3/10] n8n Workflow Engine                [1;36m⠏[0m  [3/10] n8n Workflow Engine                [1;36m⠋[0m  [3/10] n8n Workflow Engine                [1;36m⠙[0m  [3/10] n8n Workflow Engine                [1;36m⠹[0m  [3/10] n8n Workflow Engine                [1;36m⠸[0m  [3/10] n8n Workflow Engine                [1;36m⠼[0m  [3/10] n8n Workflow Engine                [1;36m⠴[0m  [3/10] n8n Workflow Engine                [1;36m⠦[0m  [3/10] n8n Workflow Engine                [1;36m⠧[0m  [3/10] n8n Workflow Engine                [1;36m⠇[0m  [3/10] n8n Workflow Engine                [1;36m⠏[0m  [3/10] n8n Workflow Engine                [1;36m⠋[0m  [3/10] n8n Workflow Engine                [1;36m⠙[0m  [3/10] n8n Workflow Engine                [1;36m⠹[0m  [3/10] n8n Workflow Engine                [1;36m⠸[0m  [3/10] n8n Workflow Engine                [1;36m⠼[0m  [3/10] n8n Workflow Engine                [1;36m⠴[0m  [3/10] n8n Workflow Engine                [1;36m⠦[0m  [3/10] n8n Workflow Engine                [1;36m⠧[0m  [3/10] n8n Workflow Engine                [1;36m⠇[0m  [3/10] n8n Workflow Engine                [1;36m⠏[0m  [3/10] n8n Workflow Engine                [1;36m⠋[0m  [3/10] n8n Workflow Engine                [1;36m⠙[0m  [3/10] n8n Workflow Engine                [1;36m⠹[0m  [3/10] n8n Workflow Engine                [1;36m⠸[0m  [3/10] n8n Workflow Engine                [1;36m⠼[0m  [3/10] n8n Workflow Engine                [1;36m⠴[0m  [3/10] n8n Workflow Engine                [1;36m⠦[0m  [3/10] n8n Workflow Engine                [1;36m⠧[0m  [3/10] n8n Workflow Engine                [1;36m⠇[0m  [3/10] n8n Workflow Engine                [1;36m⠏[0m  [3/10] n8n Workflow Engine                [1;36m⠋[0m  [3/10] n8n Workflow Engine                [1;36m⠙[0m  [3/10] n8n Workflow Engine                [1;36m⠹[0m  [3/10] n8n Workflow Engine                [1;36m⠸[0m  [3/10] n8n Workflow Engine                [1;36m⠼[0m  [3/10] n8n Workflow Engine                [1;36m⠴[0m  [3/10] n8n Workflow Engine                [1;36m⠦[0m  [3/10] n8n Workflow Engine                [1;36m⠧[0m  [3/10] n8n Workflow Engine                [1;36m⠇[0m  [3/10] n8n Workflow Engine                [1;36m⠏[0m  [3/10] n8n Workflow Engine                [1;36m⠋[0m  [3/10] n8n Workflow Engine                [1;36m⠙[0m  [3/10] n8n Workflow Engine                [1;36m⠹[0m  [3/10] n8n Workflow Engine                [1;36m⠸[0m  [3/10] n8n Workflow Engine                [1;36m⠼[0m  [3/10] n8n Workflow Engine                [1;36m⠴[0m  [3/10] n8n Workflow Engine                [1;36m⠦[0m  [3/10] n8n Workflow Engine                [1;36m⠧[0m  [3/10] n8n Workflow Engine                [1;36m⠇[0m  [3/10] n8n Workflow Engine                [1;36m⠏[0m  [3/10] n8n Workflow Engine                [1;36m⠋[0m  [3/10] n8n Workflow Engine                [1;36m⠙[0m  [3/10] n8n Workflow Engine                [1;36m⠹[0m  [3/10] n8n Workflow Engine                [1;36m⠸[0m  [3/10] n8n Workflow Engine                [1;36m⠼[0m  [3/10] n8n Workflow Engine                [1;36m⠴[0m  [3/10] n8n Workflow Engine                [1;36m⠦[0m  [3/10] n8n Workflow Engine                [1;36m⠧[0m  [3/10] n8n Workflow Engine                [1;36m⠇[0m  [3/10] n8n Workflow Engine                [1;36m⠏[0m  [3/10] n8n Workflow Engine                [1;36m⠋[0m  [3/10] n8n Workflow Engine                [1;36m⠙[0m  [3/10] n8n Workflow Engine                [1;36m⠹[0m  [3/10] n8n Workflow Engine                [1;36m⠸[0m  [3/10] n8n Workflow Engine                [1;36m⠼[0m  [3/10] n8n Workflow Engine                [1;36m⠴[0m  [3/10] n8n Workflow Engine                [1;36m⠦[0m  [3/10] n8n Workflow Engine                [1;36m⠧[0m  [3/10] n8n Workflow Engine                [1;36m⠇[0m  [3/10] n8n Workflow Engine                [1;36m⠏[0m  [3/10] n8n Workflow Engine                [1;36m⠋[0m  [3/10] n8n Workflow Engine                [1;36m⠙[0m  [3/10] n8n Workflow Engine                [1;36m⠹[0m  [3/10] n8n Workflow Engine                [1;36m⠸[0m  [3/10] n8n Workflow Engine                [1;36m⠼[0m  [3/10] n8n Workflow Engine                [1;36m⠴[0m  [3/10] n8n Workflow Engine                [1;36m⠦[0m  [3/10] n8n Workflow Engine                [1;36m⠧[0m  [3/10] n8n Workflow Engine                [1;36m⠇[0m  [3/10] n8n Workflow Engine                [1;36m⠏[0m  [3/10] n8n Workflow Engine                [1;36m⠋[0m  [3/10] n8n Workflow Engine                [1;36m⠙[0m  [3/10] n8n Workflow Engine                [1;36m⠹[0m  [3/10] n8n Workflow Engine                [1;36m⠸[0m  [3/10] n8n Workflow Engine                [1;36m⠼[0m  [3/10] n8n Workflow Engine                [1;36m⠴[0m  [3/10] n8n Workflow Engine                [1;36m⠦[0m  [3/10] n8n Workflow Engine                [1;36m⠧[0m  [3/10] n8n Workflow Engine                [1;36m⠇[0m  [3/10] n8n Workflow Engine                [1;36m⠏[0m  [3/10] n8n Workflow Engine                [1;36m⠋[0m  [3/10] n8n Workflow Engine                [1;36m⠙[0m  [3/10] n8n Workflow Engine                [1;32m✔[0m  [3/10] n8n Workflow Engine               [2mdone[0m
+  [1;36m⠋[0m  [4/10] NetLock RMM Server                 [1;36m⠙[0m  [4/10] NetLock RMM Server                 [1;36m⠹[0m  [4/10] NetLock RMM Server                 [1;36m⠸[0m  [4/10] NetLock RMM Server                 [1;32m✔[0m  [4/10] NetLock RMM Server                [2mdone[0m
+  [1;36m⠋[0m  [5/10] NetLock RMM Web Console            [1;36m⠙[0m  [5/10] NetLock RMM Web Console            [1;36m⠹[0m  [5/10] NetLock RMM Web Console            [1;36m⠸[0m  [5/10] NetLock RMM Web Console            [1;32m✔[0m  [5/10] NetLock RMM Web Console           [2mdone[0m
+  [1;36m⠋[0m  [6/10] pgAdmin 4                          [1;36m⠙[0m  [6/10] pgAdmin 4                          [1;36m⠹[0m  [6/10] pgAdmin 4                          [1;36m⠸[0m  [6/10] pgAdmin 4                          [1;36m⠼[0m  [6/10] pgAdmin 4                          [1;32m✔[0m  [6/10] pgAdmin 4                         [2mdone[0m
+  [1;36m⠋[0m  [7/10] phpMyAdmin                         [1;36m⠙[0m  [7/10] phpMyAdmin                         [1;36m⠹[0m  [7/10] phpMyAdmin                         [1;36m⠸[0m  [7/10] phpMyAdmin                         [1;36m⠼[0m  [7/10] phpMyAdmin                         [1;32m✔[0m  [7/10] phpMyAdmin                        [2mdone[0m
+  [1;36m⠋[0m  [8/10] Grafana Alloy                      [1;36m⠙[0m  [8/10] Grafana Alloy                      [1;36m⠹[0m  [8/10] Grafana Alloy                      [1;36m⠸[0m  [8/10] Grafana Alloy                      [1;36m⠼[0m  [8/10] Grafana Alloy                      [1;32m✔[0m  [8/10] Grafana Alloy                     [2mdone[0m
+  [1;36m⠋[0m  [9/10] Forgejo Git Server                 [1;36m⠙[0m  [9/10] Forgejo Git Server                 [1;36m⠹[0m  [9/10] Forgejo Git Server                 [1;36m⠸[0m  [9/10] Forgejo Git Server                 [1;36m⠼[0m  [9/10] Forgejo Git Server                 [1;36m⠴[0m  [9/10] Forgejo Git Server                 [1;36m⠦[0m  [9/10] Forgejo Git Server                 [1;36m⠧[0m  [9/10] Forgejo Git Server                 [1;36m⠇[0m  [9/10] Forgejo Git Server                 [1;36m⠏[0m  [9/10] Forgejo Git Server                 [1;36m⠋[0m  [9/10] Forgejo Git Server                 [1;36m⠙[0m  [9/10] Forgejo Git Server                 [1;36m⠹[0m  [9/10] Forgejo Git Server                 [1;36m⠸[0m  [9/10] Forgejo Git Server                 [1;36m⠼[0m  [9/10] Forgejo Git Server                 [1;32m✔[0m  [9/10] Forgejo Git Server                [2mdone[0m
+  [1;36m⠋[0m  [10/10] Nginx Proxy Manager               [1;36m⠙[0m  [10/10] Nginx Proxy Manager               [1;36m⠹[0m  [10/10] Nginx Proxy Manager               [1;36m⠸[0m  [10/10] Nginx Proxy Manager               [1;36m⠼[0m  [10/10] Nginx Proxy Manager               [1;36m⠴[0m  [10/10] Nginx Proxy Manager               [1;32m✔[0m  [10/10] Nginx Proxy Manager              [2mdone[0m
+
+[1;32m  [OK]    All images pulled successfully.[0m
+
+[1;35m################################################################################[0m
+[1;35m  Stage 11: Starting All Docker Services[0m
+[1;35m################################################################################[0m
+[1;36m  [INFO]  Starting MySQL first (isolated healthcheck)...[0m
+ Network xinle_network Creating 
+ Network xinle_network Created 
+ Container mysql Creating 
+ Container mysql Created 
+ Container mysql Starting 
+ Container mysql Started 
+[1;36m  [INFO]  Waiting for MySQL to become healthy (up to 90s)...[0m
+
+  [1;36m⠿[0m  mysql health: starting      0s
+  [1;36m⠿[0m  mysql health: starting      5s
+  [1;36m⠿[0m  mysql health: healthy       10s
+[1;32m  [OK]    MySQL is healthy.[0m
+[1;36m  [INFO]  Starting all remaining services...[0m
+ Volume xinle-infra_alloy_data Creating 
+ Volume xinle-infra_alloy_data Created 
+ Container alloy Creating 
+ Container postgres Creating 
+ Container npm Creating 
+ Container mysql Running 
+ Container phpmyadmin Creating 
+ Container netlockrmm-server Creating 
+ Container postgres Created 
+ Container forgejo Creating 
+ Container pgadmin Creating 
+ Container n8n Creating 
+ Container netlockrmm-server Created 
+ Container alloy Created 
+ Container netlockrmm-web Creating 
+ Container phpmyadmin Created 
+ Container npm Created 
+ Container netlockrmm-web Created 
+ Container forgejo Created 
+ Container n8n Created 
+ Container pgadmin Created 
+ Container mysql Waiting 
+ Container npm Starting 
+ Container alloy Starting 
+ Container postgres Starting 
+ Container mysql Waiting 
+ Container postgres Started 
+ Container postgres Waiting 
+ Container postgres Waiting 
+ Container postgres Waiting 
+ Container npm Started 
+ Container alloy Started 
+ Container mysql Healthy 
+ Container netlockrmm-server Starting 
+ Container mysql Healthy 
+ Container phpmyadmin Starting 
+ Container phpmyadmin Started 
+ Container netlockrmm-server Started 
+ Container netlockrmm-web Starting 
+ Container netlockrmm-web Started 
+ Container postgres Healthy 
+ Container postgres Healthy 
+ Container pgadmin Starting 
+ Container forgejo Starting 
+ Container postgres Healthy 
+ Container n8n Starting 
+ Container forgejo Started 
+ Container n8n Started 
+ Container pgadmin Started 
+
+[1;36m  [INFO]  Waiting for all containers to become healthy...[0m
+
+[K    \e[1;32m●\e[0m \e[1;37mpostgres\e[0m  \e[1;32m●\e[0m \e[1;37mmysql\e[0m  \e[1;32m●\e[0m \e[1;37mnpm\e[0m    [2m0s[0m
+[1;32m  [OK]    All containers healthy.[0m
+
+  [1m[1;37mCONTAINER                 STATUS          HEALTH          PORTS[0m
+  [2m─────────────────────────────────────────────────────────────────[0m
+  alloy                     [1;33mUp             [0m [2mn/a            [0m 6 seconds 0.0.0.0:12345->12345/tcp, [::]
+  forgejo                   [1;33mUp             [0m [2mn/a            [0m Less than a second 22/tcp, 3000/tcp
+  mysql                     [1;33mUp             [0m [1;32mhealthy        [0m 16 seconds (healthy) 3306/tcp, 33060/tcp
+  n8n                       [1;33mUp             [0m [2mn/a            [0m Less than a second 5678/tcp
+  netlockrmm-server         [1;33mUp             [0m [2mn/a            [0m Less than a second
+  netlockrmm-web            [1;33mUp             [0m [2mn/a            [0m 1 second
+  npm                       [1;33mUp             [0m [1;32mhealthy        [0m 6 seconds (healthy) 0.0.0.0:80-81->80-81
+  pgadmin                   [1;33mUp             [0m [2mn/a            [0m Less than a second 80/tcp, 443/tcp
+  phpmyadmin                [1;33mUp             [0m [2mn/a            [0m 5 seconds 80/tcp
+  postgres                  [1;33mUp             [0m [1;32mhealthy        [0m 6 seconds (healthy) 5432/tcp
+
+
+[1;35m################################################################################[0m
+[1;35m  DEPLOYMENT COMPLETE ✓[0m
+[1;35m################################################################################[0m
+
+[1;32m  All services are running. Complete these steps to finish:[0m
+
+  ┌─────────────────────────────────────────────────────────────────────┐
+  │  STEP 1 — Cloudflare DNS                                            │
+  │  A record: rmmx.xinle.biz → 184.105.7.78                              │
+  │  Proxy: DNS Only (grey cloud) initially                             │
+  ├─────────────────────────────────────────────────────────────────────┤
+  │  STEP 2 — Nginx Proxy Manager                                       │
+  │  URL:   http://184.105.7.78:81                                         │
+  │  Login: admin@example.com / changeme                                │
+  ├─────────────────────────────────────────────────────────────────────┤
+  │  STEP 3 — UDM Pro IPsec VPN                                         │
+  │  PSK     : 56a5ba999213560a156b30232615f679                                               │
+  │  VPS IP  : 184.105.7.78                                                │
+  │  Remote  : 172.20.0.0/16  |  Local: 10.1.0.0/24                    │
+  │  IKEv2 | AES-256 | SHA-256 | DH Group 14                           │
+  │  Guide: docs/07_ipsec_vpn_next_steps.md                            │
+  └─────────────────────────────────────────────────────────────────────┘
+
+  Runbook : /home/ubuntu/xinle-infra/docs/POST_INSTALL_RUNBOOK.md
+  Log     : /tmp/xinle-install-20260313-092249.log
+
+
+[1;35m################################################################################[0m
+[1;35m  Pushing install log to GitHub[0m
+[1;35m################################################################################[0m
