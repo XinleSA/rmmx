@@ -1,9 +1,9 @@
 #!/bin/bash
 #############################################################################
 # Author: James Barrett | Company: Xinle, LLC
-# Version: 1.1.0
+# Version: 1.2.0
 # Created: March 11, 2025
-# Last Modified: March 11, 2025
+# Last Modified: March 13, 2026
 #############################################################################
 #
 #  Xinle 欣乐 — Bootstrap Launcher
@@ -27,12 +27,15 @@ set -euo pipefail
 readonly GITHUB_REPO="XinleSA/rmmx"
 readonly PROJECT_DEST="/home/ubuntu/xinle-infra"
 
+# Embedded PAT for authenticated clone and log push — repo scope only
+readonly GITHUB_PAT="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"
+
 # --- Colors ---
 G='\e[1;32m'; C='\e[1;36m'; R='\e[1;31m'; Y='\e[1;33m'; P='\e[1;35m'; NC='\e[0m'
 
 echo ""
 echo -e "${P}################################################################################${NC}"
-echo -e "${P}  Xinle 欣乐 — Bootstrap Launcher v1.0.0${NC}"
+echo -e "${P}  Xinle 欣乐 — Bootstrap Launcher v1.2.0${NC}"
 echo -e "${P}  Fetching latest installer from GitHub...${NC}"
 echo -e "${P}################################################################################${NC}"
 echo ""
@@ -49,28 +52,10 @@ if ! command -v git &>/dev/null || ! command -v curl &>/dev/null; then
     apt-get update -qq && apt-get install -y git curl
 fi
 
-# Prompt for GitHub PAT — needed to push install logs back to the repo.
-# The repo is public so cloning works without auth, but pushing requires it.
-echo ""
-echo -e "${C}  A GitHub Personal Access Token (PAT) is needed to push install${NC}"
-echo -e "${C}  logs back to the repository for later review.${NC}"
-echo ""
-echo -e "${C}  To create one: https://github.com/settings/tokens${NC}"
-echo -e "${C}  Required scope: repo (full control)${NC}"
-echo ""
-printf "  GitHub PAT (leave blank to skip log push): " > /dev/tty
-GITHUB_PAT=""
-read -r GITHUB_PAT < /dev/tty
-echo ""
 export GITHUB_PAT
 
-# Build the authenticated remote URL if PAT was provided
-if [ -n "$GITHUB_PAT" ]; then
-    CLONE_URL="https://${GITHUB_PAT}@github.com/${GITHUB_REPO}.git"
-else
-    CLONE_URL="https://github.com/${GITHUB_REPO}.git"
-    echo -e "${Y}  [WARN]  No PAT provided. Install logs will be saved locally only.${NC}"
-fi
+# Build the authenticated remote URL
+CLONE_URL="https://${GITHUB_PAT}@github.com/${GITHUB_REPO}.git"
 
 # Clone or update the repo
 if [ ! -d "${PROJECT_DEST}/.git" ]; then
@@ -80,7 +65,7 @@ if [ ! -d "${PROJECT_DEST}/.git" ]; then
 else
     echo -e "${C}  [INFO]  Updating existing repository...${NC}"
     git config --global --add safe.directory "$PROJECT_DEST" 2>/dev/null || true
-    # Update remote URL with PAT (or anonymous if no PAT)
+    # Update remote URL with PAT
     git -C "$PROJECT_DEST" remote set-url origin "$CLONE_URL"
     git -C "$PROJECT_DEST" fetch origin main
     git -C "$PROJECT_DEST" reset --hard origin/main
