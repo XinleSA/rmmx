@@ -1,7 +1,7 @@
 #!/bin/bash
 #############################################################################
 # Author: James Barrett | Company: Xinle, LLC
-# Version: 1.2.0
+# Version: 1.3.0
 # Created: March 11, 2025
 # Last Modified: March 13, 2026
 #############################################################################
@@ -28,14 +28,14 @@ readonly GITHUB_REPO="XinleSA/rmmx"
 readonly PROJECT_DEST="/home/ubuntu/xinle-infra"
 
 # Embedded PAT for authenticated clone and log push — repo scope only
-readonly GITHUB_PAT="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"
+readonly GITHUB_PAT="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"
 
 # --- Colors ---
 G='\e[1;32m'; C='\e[1;36m'; R='\e[1;31m'; Y='\e[1;33m'; P='\e[1;35m'; NC='\e[0m'
 
 echo ""
 echo -e "${P}################################################################################${NC}"
-echo -e "${P}  Xinle 欣乐 — Bootstrap Launcher v1.2.0${NC}"
+echo -e "${P}  Xinle 欣乐 — Bootstrap Launcher v1.3.0${NC}"
 echo -e "${P}  Fetching latest installer from GitHub...${NC}"
 echo -e "${P}################################################################################${NC}"
 echo ""

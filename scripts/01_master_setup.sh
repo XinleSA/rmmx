@@ -1,7 +1,7 @@
 #!/bin/bash
 #############################################################################
 # Author: James Barrett | Company: Xinle, LLC
-# Version: 13.21.0
+# Version: 13.22.0
 # Created: March 11, 2025
 # Last Modified: March 13, 2026
 #############################################################################
@@ -258,17 +258,12 @@ push_log_to_github() {
         git config user.email "deploy@xinle.biz"
         git config user.name "Xinle Deploy Bot"
 
-        # Set remote URL with embedded PAT so push never prompts for credentials.
-        # The PAT is sourced from the existing remote URL set by bootstrap.sh,
-        # or falls back to unauthenticated (public repo read — push will warn).
-        local current_remote
-        current_remote=$(git remote get-url origin 2>/dev/null || echo "")
-        if [[ "$current_remote" != *"@github.com"* ]]; then
-            # No PAT embedded yet — try to set one if GITHUB_PAT env var is set,
-            # otherwise push will attempt anonymous (will fail on private repos)
-            if [ -n "${GITHUB_PAT:-}" ]; then
-                git remote set-url origin "https://${GITHUB_PAT}@github.com/${GITHUB_REPO}.git"
-            fi
+        # Always set the authenticated remote URL using the embedded PAT.
+        # GITHUB_PAT is exported by bootstrap.sh before handing off to this script.
+        # GIT_TERMINAL_PROMPT=0 and GIT_ASKPASS=true prevent any credential prompts
+        # (git would otherwise try to read from /dev/tty which fails in some envs).
+        if [ -n "${GITHUB_PAT:-}" ]; then
+            git remote set-url origin "https://${GITHUB_PAT}@github.com/${GITHUB_REPO}.git"
         fi
 
         mkdir -p error_logs
@@ -283,9 +278,11 @@ push_log_to_github() {
 Host: $(hostname) | IP: $(curl -s --max-time 5 ifconfig.me 2>/dev/null || echo unknown)
 Timestamp: $(date -u '+%Y-%m-%d %H:%M:%S UTC')" 2>/dev/null || true
 
-        GIT_TERMINAL_PROMPT=0 git push origin main 2>&1 && \
+        # Push HEAD to main. GIT_ASKPASS=true returns empty string for any prompt,
+        # effectively disabling interactive credential requests without failing.
+        GIT_TERMINAL_PROMPT=0 GIT_ASKPASS=true git push origin HEAD:main 2>&1 && \
             print_ok "Log pushed → GitHub: ${logname}" || \
-            print_warn "Log push skipped (no auth). Log available locally: ${LOG_FILE}"
+            print_warn "Log push skipped. Log available locally: ${LOG_FILE}"
     ) || print_warn "Log push encountered an error. Log at: ${LOG_FILE}"
 }
 

@@ -2,9 +2,9 @@
 #  Xinle 欣乐 — Master Docker Compose File
 # =============================================================================
 #  Author:        James Barrett | Company: Xinle, LLC
-#  Version:       8.2.0
+#  Version:       8.3.0
 #  Created:       March 11, 2025
-#  Last Modified: March 11, 2025
+#  Last Modified: March 13, 2026
 # =============================================================================
 #
 #  PREREQUISITES:
@@ -122,11 +122,15 @@ services:
       mysql:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:5000"]
+      # The image has no curl/wget — use bash built-in TCP check instead.
+      # Port 5000 is the Kestrel HTTP endpoint defined in appsettings.json.
+      # start_period is generous (120s) because the web console runs DB
+      # migrations on first boot before Kestrel starts accepting connections.
+      test: ["CMD-SHELL", "bash -c 'echo > /dev/tcp/localhost/5000' 2>/dev/null && exit 0 || exit 1"]
       interval: 15s
       timeout: 10s
-      retries: 10
-      start_period: 90s
+      retries: 12
+      start_period: 120s
 
   netlockrmm-server:
     image: nicomak101/netlock-rmm-server:latest
