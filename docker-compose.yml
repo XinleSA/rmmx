@@ -97,7 +97,7 @@ services:
       - FORGEJO__database__NAME=${FORGEJO_DB:-forgejo}
       - FORGEJO__database__USER=${POSTGRES_USER}
       - FORGEJO__database__PASSWD=${POSTGRES_PASSWORD}
-      - FORGEJO__server__ROOT_URL=https://rmmx.xinle.biz/git
+      - FORGEJO__server__ROOT_URL=https://rmmx.xinle.biz/git/
     depends_on:
       postgres:
         condition: service_healthy
@@ -193,6 +193,7 @@ services:
       - PGADMIN_DEFAULT_EMAIL=admin@xinle.biz
       - PGADMIN_DEFAULT_PASSWORD=${PGADMIN_PASSWORD}
       - PGADMIN_CONFIG_SERVER_MODE=False
+      - SCRIPT_NAME=/pgadmin
     depends_on:
       postgres:
         condition: service_healthy
@@ -231,6 +232,7 @@ services:
     environment:
       - PMA_HOST=mysql
       - PMA_PORT=3306
+      - PMA_ABSOLUTE_URI=https://rmmx.xinle.biz/pma/
       - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
     volumes:
       - /storage:/storage:ro
