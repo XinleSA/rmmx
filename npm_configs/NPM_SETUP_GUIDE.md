@@ -55,7 +55,7 @@ This is where you tell NPM how to route traffic for each subpath (`/n8n`, `/git`
 
 ### Step 5: Configure Root Redirect
 
-Finally, you need to redirect users who visit `https://rmmx.xinle.biz/` to the landing page at `https://rmmx.xinle.biz/home`.
+Finally, you need to redirect users who visit `https://rmmx.xinle.biz/` to the landing page at `https://rmmx.xinle.biz/dash/index.html`.
 
 1.  **Edit** the `rmmx.xinle.biz` proxy host again.
 2.  Go to the **Advanced** tab.

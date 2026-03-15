@@ -30,7 +30,7 @@ curl -fsSL https://raw.githubusercontent.com/XinleSA/rmmx/main/scripts/bootstrap
 
 | Field | Value |
 |-------|-------|
-| URL | `https://rmmx.xinle.biz/rmm` |
+| URL | `https://rmm.xinle.biz` |
 | First login | Set during first-run wizard (no default) |
 
 ### n8n
@@ -98,7 +98,7 @@ curl -fsSL https://raw.githubusercontent.com/XinleSA/rmmx/main/scripts/bootstrap
 |---------|-----------|-------------------|
 | Landing page | `https://rmmx.xinle.biz` | — |
 | NPM Admin | `http://184.105.7.78:81` | `npm:81` |
-| NetLock RMM | `https://rmmx.xinle.biz/rmm` | `netlockrmm-web:80` |
+| NetLock RMM | `https://rmm.xinle.biz` | `netlockrmm-web:5000` |
 | n8n | `https://rmmx.xinle.biz/n8n/` | `n8n:5678` |
 | Forgejo | `https://rmmx.xinle.biz/git/` | `forgejo:3000` |
 | pgAdmin | `https://rmmx.xinle.biz/pgadmin/` | `pgadmin:80` |
@@ -228,10 +228,10 @@ ping -c 3 10.1.0.1          # → 0% loss
 
 ### Step 5 — Application First-Run
 
-#### NetLock RMM — `https://rmmx.xinle.biz/rmm`
+#### NetLock RMM — `https://rmm.xinle.biz`
 
 1. Complete first-run wizard — create admin account
-2. **Settings → Server Settings** → set Server Address: `https://rmmx.xinle.biz`
+2. **Settings → Server Settings** → set Server Address: `https://rmm.xinle.biz``
 3. Save settings
 4. **Agents → Install Agent** → select platform → deploy to endpoints
 
@@ -273,7 +273,7 @@ ping -c 3 10.1.0.1          # → 0% loss
 | IPsec tunnel | `sudo ipsec status` | `ESTABLISHED` |
 | Route to home LAN | `ip route show \| grep 10.1` | via `xfrm0` |
 | Ping home gateway | `ping -c 3 10.1.0.1` | 0% loss |
-| NetLock RMM | `https://rmmx.xinle.biz/rmm` | Login page |
+| NetLock RMM | `https://rmm.xinle.biz` | Login page |
 | n8n | `https://rmmx.xinle.biz/n8n/` | Login/setup |
 | Forgejo | `https://rmmx.xinle.biz/git/` | Git homepage |
 | pgAdmin | `https://rmmx.xinle.biz/pgadmin/` | Login page |

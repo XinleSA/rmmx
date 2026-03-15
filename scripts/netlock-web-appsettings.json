@@ -53,7 +53,7 @@
   "Webinterface": {
     "Language": "en-US",
     "Membership_Reminder": false,
-    "PublicOverrideUrl": "https://rmmx.xinle.biz/rmm"
+    "PublicOverrideUrl": "https://rmm.xinle.biz"
   },
   "Members_Portal_Api": {
     "Enabled": true,

@@ -1,7 +1,7 @@
 #!/bin/bash
 #############################################################################
 # Author: James Barrett | Company: Xinle, LLC
-# Version: 14.0.0
+# Version: 14.1.0
 # Created: March 11, 2025
 # Last Modified: March 15, 2026
 #############################################################################
@@ -91,7 +91,7 @@ print_banner() {
     echo "  ╔══════════════════════════════════════════════════════════════════╗"
     echo "  ║          Xinle 欣乐 — Infrastructure Deployment                 ║"
     echo "  ║          Author: James Barrett | Xinle, LLC                     ║"
-    echo "  ║          Version: 14.0.0                                       ║"
+    echo "  ║          Version: 14.1.0                                       ║"
     echo "  ╚══════════════════════════════════════════════════════════════════╝"
     echo -e "\e[0m"
 }
@@ -1277,6 +1277,38 @@ print(json.dumps({
             else
                 print_warn "NPM proxy host creation failed — configure manually via http://<VPS_IP>:81"
             fi
+
+            # Create rmm.xinle.biz proxy host for NetLock RMM
+            print_info "Creating NPM proxy host: rmm.xinle.biz → netlockrmm-web:5000..."
+            RMM_PAYLOAD=$(python3 -c "import json; print(json.dumps({
+                'domain_names': ['rmm.xinle.biz'],
+                'forward_scheme': 'http',
+                'forward_host': 'netlockrmm-web',
+                'forward_port': 5000,
+                'access_list_id': 0,
+                'certificate_id': 0,
+                'ssl_forced': False,
+                'caching_enabled': False,
+                'block_exploits': True,
+                'allow_websocket_upgrade': True,
+                'http2_support': False,
+                'advanced_config': '',
+                'enabled': True,
+                'meta': {},
+                'locations': [],
+                'hsts_enabled': False,
+                'hsts_subdomains': False,
+                'trust_forwarded_proto': False
+            }))")
+            RMM_RESULT=$(curl -sf -X POST "${NPM_API}/nginx/proxy-hosts" \
+                -H "Authorization: Bearer ${NPM_TOKEN}" \
+                -H "Content-Type: application/json" \
+                -d "$RMM_PAYLOAD" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('id','err'))" 2>/dev/null || echo "err")
+            if [ "$RMM_RESULT" != "err" ] && [ -n "$RMM_RESULT" ]; then
+                print_ok "NPM proxy host created: rmm.xinle.biz (ID: ${RMM_RESULT}) → netlockrmm-web:5000"
+            else
+                print_warn "rmm.xinle.biz proxy host creation failed — add manually in NPM pointing to netlockrmm-web:5000"
+            fi
         fi
     fi
 fi
@@ -1293,8 +1325,8 @@ echo -e "\e[1;32m  All services are running. Complete these steps to finish:\e[0
 echo ""
 echo "  ┌─────────────────────────────────────────────────────────────────────┐"
 echo "  │  STEP 1 — Cloudflare DNS                                            │"
-echo "  │  A record: rmmx.xinle.biz → ${VPS_IP}                              │"
-echo "  │  Proxy: DNS Only (grey cloud) initially                             │"
+echo "  │  A record: rmmx.xinle.biz → ${VPS_IP} (DNS Only)                   │"
+echo "  │  A record: rmm.xinle.biz  → ${VPS_IP} (DNS Only)                   │"
 echo "  ├─────────────────────────────────────────────────────────────────────┤"
 echo "  │  STEP 2 — Nginx Proxy Manager                                       │"
 echo "  │  URL:   http://${VPS_IP}:81                                         │"

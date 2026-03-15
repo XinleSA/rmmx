@@ -104,7 +104,7 @@ services:
 
   # ---------------------------------------------------------------------------
   #  4. NetLock RMM — Remote Monitoring & Management
-  #     - Final URL: https://rmmx.xinle.biz/rmm
+  #     - Final URL: https://rmm.xinle.biz
   # ---------------------------------------------------------------------------
   # netlockrmm-web MUST start first — it creates the MySQL schema on first boot
   netlockrmm-web:
