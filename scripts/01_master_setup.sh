@@ -1241,7 +1241,7 @@ else
         # Sub-path advanced nginx config — uses ^~ prefix matching to beat NPM's
         # regex assets.conf catch-all, ensuring /git/ /n8n/ /pgadmin/ /pma/ asset
         # requests are routed to the correct upstream container.
-        NPM_ADVANCED_CONFIG='\n# /git/ -> Forgejo (^~ beats regex assets.conf)\nlocation ^~ /git/ {\n    proxy_pass http://forgejo:3000/;\n    proxy_set_header Host $host;\n    proxy_set_header X-Real-IP $remote_addr;\n    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;\n    proxy_set_header X-Forwarded-Proto $scheme;\n    proxy_set_header X-Forwarded-Host $host;\n    proxy_set_header X-Forwarded-Prefix /git;\n    client_max_body_size 512m;\n    proxy_http_version 1.1;\n    proxy_set_header Upgrade $http_upgrade;\n    proxy_set_header Connection $http_connection;\n}\n# /n8n/ -> n8n\nlocation ^~ /n8n/ {\n    proxy_pass http://n8n:5678/;\n    proxy_set_header Host $host;\n    proxy_set_header X-Real-IP $remote_addr;\n    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;\n    proxy_set_header X-Forwarded-Proto $scheme;\n    proxy_http_version 1.1;\n    proxy_set_header Upgrade $http_upgrade;\n    proxy_set_header Connection "upgrade";\n}\n# /pgadmin/ -> pgAdmin\nlocation ^~ /pgadmin/ {\n    proxy_pass http://pgadmin:80/pgadmin/;\n    proxy_set_header Host $host;\n    proxy_set_header X-Real-IP $remote_addr;\n    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;\n    proxy_set_header X-Forwarded-Proto $scheme;\n    proxy_set_header X-Script-Name /pgadmin;\n}\n# /pma/ -> phpMyAdmin\nlocation ^~ /pma/ {\n    proxy_pass http://phpmyadmin:80/;\n    proxy_set_header Host $host;\n    proxy_set_header X-Real-IP $remote_addr;\n    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;\n    proxy_set_header X-Forwarded-Proto $scheme;\n}\n'
+        NPM_ADVANCED_CONFIG='\n# Root redirect to dashboard\nlocation = / { return 301 /dash/index.html; }\n# /dash/ -> Landing dashboard (nginx:alpine serving ./dash/)\nlocation ^~ /dash/ {\n    proxy_pass http://landing:80/;\n    proxy_set_header Host $host;\n    proxy_set_header X-Real-IP $remote_addr;\n    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;\n    proxy_set_header X-Forwarded-Proto $scheme;\n}\n# /git/ -> Forgejo (^~ beats regex assets.conf)\nlocation ^~ /git/ {\n    proxy_pass http://forgejo:3000/;\n    proxy_set_header Host $host;\n    proxy_set_header X-Real-IP $remote_addr;\n    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;\n    proxy_set_header X-Forwarded-Proto $scheme;\n    proxy_set_header X-Forwarded-Host $host;\n    proxy_set_header X-Forwarded-Prefix /git;\n    client_max_body_size 512m;\n    proxy_http_version 1.1;\n    proxy_set_header Upgrade $http_upgrade;\n    proxy_set_header Connection $http_connection;\n}\n# /n8n/ -> n8n\nlocation ^~ /n8n/ {\n    proxy_pass http://n8n:5678/;\n    proxy_set_header Host $host;\n    proxy_set_header X-Real-IP $remote_addr;\n    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;\n    proxy_set_header X-Forwarded-Proto $scheme;\n    proxy_http_version 1.1;\n    proxy_set_header Upgrade $http_upgrade;\n    proxy_set_header Connection "upgrade";\n}\n# /pgadmin/ -> pgAdmin\nlocation ^~ /pgadmin/ {\n    proxy_pass http://pgadmin:80/pgadmin/;\n    proxy_set_header Host $host;\n    proxy_set_header X-Real-IP $remote_addr;\n    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;\n    proxy_set_header X-Forwarded-Proto $scheme;\n    proxy_set_header X-Script-Name /pgadmin;\n}\n# /pma/ -> phpMyAdmin\nlocation ^~ /pma/ {\n    proxy_pass http://phpmyadmin:80/;\n    proxy_set_header Host $host;\n    proxy_set_header X-Real-IP $remote_addr;\n    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;\n    proxy_set_header X-Forwarded-Proto $scheme;\n}\n'
 
         # Create rmmx.xinle.biz proxy host (main entry point + all sub-paths)
         PAYLOAD=$(python3 -c "
@@ -1250,8 +1250,8 @@ advanced = '$NPM_ADVANCED_CONFIG'.replace('\\n', '\n')
 print(json.dumps({
     'domain_names': ['rmmx.xinle.biz'],
     'forward_scheme': 'http',
-    'forward_host': 'netlockrmm-web',
-    'forward_port': 5000,
+    'forward_host': 'landing',
+    'forward_port': 80,
     'access_list_id': 0,
     'certificate_id': 0,
     'ssl_forced': 0,
@@ -1273,7 +1273,7 @@ print(json.dumps({
                 -H "Content-Type: application/json" \
                 -d "$PAYLOAD" 2>/dev/null | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('id','err'))" 2>/dev/null || echo "err")
             if [ "$RESULT" != "err" ] && [ -n "$RESULT" ]; then
-                print_ok "NPM proxy host created: rmmx.xinle.biz (ID: ${RESULT}) with sub-paths /git/ /n8n/ /pgadmin/ /pma/"
+                print_ok "NPM proxy host created: rmmx.xinle.biz (ID: ${RESULT}) — dashboard: https://rmmx.xinle.biz/dash/index.html"
             else
                 print_warn "NPM proxy host creation failed — configure manually via http://<VPS_IP>:81"
             fi
@@ -1308,7 +1308,8 @@ echo "  │  IKEv2 | AES-256 | SHA-256 | DH Group 14                           �
 echo "  │  Guide: docs/07_ipsec_vpn_next_steps.md                            │"
 echo "  └─────────────────────────────────────────────────────────────────────┘"
 echo ""
-echo "  Runbook : ${PROJECT_DEST}/docs/POST_INSTALL_RUNBOOK.md"
+echo "  Dashboard: https://rmmx.xinle.biz/dash/index.html
+  Runbook : ${PROJECT_DEST}/docs/POST_INSTALL_RUNBOOK.md"
 echo "  Log     : ${LOG_FILE}"
 echo ""
 

@@ -2,7 +2,7 @@
 #  Xinle 欣乐 — Master Docker Compose File
 # =============================================================================
 #  Author:        James Barrett | Company: Xinle, LLC
-#  Version:       8.3.0
+#  Version:       9.0.0
 #  Created:       March 11, 2025
 #  Last Modified: March 13, 2026
 # =============================================================================
@@ -262,6 +262,21 @@ services:
       - ./monitoring/alloy-config.alloy:/etc/alloy/config.alloy:ro
       - alloy_data:/var/lib/alloy/data
       - /storage:/storage:ro
+
+  # ---------------------------------------------------------------------------
+  #  Landing / Dashboard — served at /dash/ via NPM
+  #  Lightweight nginx container serving the static dashboard page.
+  #  Accessible at: https://rmmx.xinle.biz/dash/index.html
+  # ---------------------------------------------------------------------------
+  landing:
+    image: nginx:alpine
+    container_name: landing
+    restart: unless-stopped
+    volumes:
+      - ./dash:/usr/share/nginx/html:ro
+      - /storage:/storage:ro
+    networks:
+      - xinle_network
 
 # =============================================================================
 #  Networks & Volumes
